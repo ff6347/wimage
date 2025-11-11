@@ -1,6 +1,7 @@
 ---
 // ABOUTME: Demo page with automatic chained workflow from image capture to visualization
 // ABOUTME: Chains all API calls automatically and displays final result in fullscreen
+import Footer from "../components/Footer.astro";
 import "../styles/shared.css";
 ---
 
@@ -25,6 +26,8 @@ import "../styles/shared.css";
 				<div class="loading-spinner"></div>
 				<p id="loadingMessage">Processing...</p>
 			</div>
+
+			<Footer />
 		</div>
 
 		<div id="visualizationContainer" class="hidden"></div>
