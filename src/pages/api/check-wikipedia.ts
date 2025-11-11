@@ -17,6 +17,18 @@ interface WikipediaCheckResult {
 	url?: string;
 }
 
+export const GET: APIRoute = async () => {
+	return new Response(
+		JSON.stringify({
+			endpoint: "/api/check-wikipedia",
+			description: "Checks if Wikipedia articles exist for given terms using the MediaWiki API. Queries the API with each term and returns URLs for articles that exist.",
+			method: "POST",
+			apiUsed: "Wikipedia MediaWiki API (opensearch action)",
+		}),
+		{ status: 200, headers: { "Content-Type": "application/json" } },
+	);
+};
+
 export const POST: APIRoute = async ({ request }) => {
 	if (!validateOrigin(request)) {
 		return createCorsErrorResponse();

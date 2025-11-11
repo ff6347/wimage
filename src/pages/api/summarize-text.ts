@@ -22,6 +22,21 @@ interface SummaryResult {
 	error?: string;
 }
 
+const SYSTEM_PROMPT = "You are a helpful assistant that extracts key facts from Wikipedia articles. Summarize 5 most important sections of each of the articles into exactly one short, clear sentences that capture the most important information. Be concise and informative. Then create a new Wikipedia article based on the content. Keep it short as the goal is to provide a quick overview. Return ONLY the summary text without any additional commentary.";
+
+export const GET: APIRoute = async () => {
+	return new Response(
+		JSON.stringify({
+			endpoint: "/api/summarize-text",
+			description: "Summarizes Wikipedia articles using OpenAI",
+			method: "POST",
+			model: "gpt-5",
+			systemPrompt: SYSTEM_PROMPT,
+		}),
+		{ status: 200, headers: { "Content-Type": "application/json" } },
+	);
+};
+
 export const POST: APIRoute = async ({ request, locals }) => {
 	if (!validateOrigin(request)) {
 		return createCorsErrorResponse();
@@ -72,8 +87,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 						messages: [
 							{
 								role: "system",
-								content:
-									"You are a helpful assistant that extracts key facts from Wikipedia articles. Summarize 5 most important sections of each of the articles into exactly one short, clear sentences that capture the most important information. Be concise and informative. Then create a new Wikipedia article based on the content. Keep it short as the goal is to provide a quick overview. Return ONLY the summary text without any additional commentary.",
+								content: SYSTEM_PROMPT,
 							},
 							{
 								role: "user",

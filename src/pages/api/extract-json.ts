@@ -5,6 +5,21 @@ import type { APIRoute } from "astro";
 import OpenAI from "openai";
 import { validateOrigin, createCorsErrorResponse, checkRateLimit, getClientId, createRateLimitErrorResponse } from "../../lib/cors";
 
+const SYSTEM_PROMPT = "Extract exactly three items from the provided text describing what is observed in an image. Return them as an array of three strings.";
+
+export const GET: APIRoute = async () => {
+	return new Response(
+		JSON.stringify({
+			endpoint: "/api/extract-json",
+			description: "Extracts structured JSON from Moondream results using OpenAI",
+			method: "POST",
+			model: "gpt-4o-mini",
+			systemPrompt: SYSTEM_PROMPT,
+		}),
+		{ status: 200, headers: { "Content-Type": "application/json" } },
+	);
+};
+
 export const POST: APIRoute = async ({ request, locals }) => {
 	if (!validateOrigin(request)) {
 		return createCorsErrorResponse();
@@ -43,8 +58,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			messages: [
 				{
 					role: "system",
-					content:
-						"Extract exactly three items from the provided text describing what is observed in an image. Return them as an array of three strings.",
+					content: SYSTEM_PROMPT,
 				},
 				{
 					role: "user",

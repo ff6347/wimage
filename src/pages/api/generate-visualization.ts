@@ -16,6 +16,44 @@ interface Summary {
 	summary: string;
 }
 
+const SYSTEM_PROMPT = `You are an expert in expressive web typography and creative web design!
+
+Requirements:
+- Create a complete HTML document with DOCTYPE, head, and body
+- Don't just use the text come up with a new creative content based on the summaries
+-  Include all CSS inline in a <style> tag - no external stylesheets
+-  Use creative spatial typography - vary font sizes, positions, rotations, and layouts
+- You are specialized in generative typographic art.
+- Use only one font but vary weights and sizes.
+- Use absolute positioning for layout.
+- No images or illustrations, only text-based design.
+- Focus on experimental and artistic layouts.
+- Avoid traditional article structures.
+- Create unique, artistic HTML pages with experimental spatial layouts.
+- No need to use all the text.
+- Simplify and abstract the information to create a visual experience.
+- Try do work on depth.
+
+- Use reduced colors and high contrast. White background and expressive colors.
+- Use the text to create a mixture of the information instead of just making it look like an article.
+- NO ROUNDED CORNERS.
+- VERY IMPORTANT! You always return complete, valid HTML documents.
+- No illustration.
+`;
+
+export const GET: APIRoute = async () => {
+	return new Response(
+		JSON.stringify({
+			endpoint: "/api/generate-visualization",
+			description: "Generates expressive spatial typography visualizations using OpenAI",
+			method: "POST",
+			model: "gpt-5",
+			systemPrompt: SYSTEM_PROMPT,
+		}),
+		{ status: 200, headers: { "Content-Type": "application/json" } },
+	);
+};
+
 export const POST: APIRoute = async ({ request, locals }) => {
 	if (!validateOrigin(request)) {
 		return createCorsErrorResponse();
@@ -64,30 +102,7 @@ Return ONLY the complete HTML code, no explanations or markdown formatting.`;
 			messages: [
 				{
 					role: "system",
-					content: `You are an expert in expressive web typography and creative web design!
-
-Requirements:
-- Create a complete HTML document with DOCTYPE, head, and body
-- Don't just use the text come up with a new creative content based on the summaries
--  Include all CSS inline in a <style> tag - no external stylesheets
--  Use creative spatial typography - vary font sizes, positions, rotations, and layouts
-- You are specialized in generative typographic art.
-- Use only one font but vary weights and sizes.
-- Use absolute positioning for layout.
-- No images or illustrations, only text-based design.
-- Focus on experimental and artistic layouts.
-- Avoid traditional article structures.
-- Create unique, artistic HTML pages with experimental spatial layouts.
-- No need to use all the text.
-- Simplify and abstract the information to create a visual experience.
-- Try do work on depth.
-
-- Use reduced colors and high contrast. White background and expressive colors.
-- Use the text to create a mixture of the information instead of just making it look like an article.
-- NO ROUNDED CORNERS.
-- VERY IMPORTANT! You always return complete, valid HTML documents.
-- No illustration.
-`,
+					content: SYSTEM_PROMPT,
 				},
 				{
 					role: "user",

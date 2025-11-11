@@ -30,6 +30,18 @@ const wikiUrlToApiUrl = (url: string): string | null => {
 	}
 };
 
+export const GET: APIRoute = async () => {
+	return new Response(
+		JSON.stringify({
+			endpoint: "/api/fetch-wikipedia-text",
+			description: "Fetches full Wikipedia article text for given URLs using the MediaWiki API. Extracts plain text content from articles.",
+			method: "POST",
+			apiUsed: "Wikipedia MediaWiki API (query action with extracts)",
+		}),
+		{ status: 200, headers: { "Content-Type": "application/json" } },
+	);
+};
+
 export const POST: APIRoute = async ({ request }) => {
 	if (!validateOrigin(request)) {
 		return createCorsErrorResponse();

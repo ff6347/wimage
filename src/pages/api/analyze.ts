@@ -4,6 +4,20 @@
 import type { APIRoute } from "astro";
 import { validateOrigin, createCorsErrorResponse, checkRateLimit, getClientId, createRateLimitErrorResponse } from "../../lib/cors";
 
+const QUERY_PROMPT = 'write a description of what you see. Point out exactly three things in one word. I only want JSON output. Don\'t add any newlines make it as compact as possible. Make it an array ```ts type result:string[] = ["item 1", "item 2", "item 3"] ```';
+
+export const GET: APIRoute = async () => {
+	return new Response(
+		JSON.stringify({
+			endpoint: "/api/analyze",
+			description: "Analyzes images using Moondream vision AI",
+			method: "POST",
+			query: QUERY_PROMPT,
+		}),
+		{ status: 200, headers: { "Content-Type": "application/json" } },
+	);
+};
+
 export const POST: APIRoute = async ({ request, locals }) => {
 	if (!validateOrigin(request)) {
 		return createCorsErrorResponse();

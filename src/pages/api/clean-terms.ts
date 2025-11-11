@@ -19,6 +19,26 @@ interface CleanTermsResponse {
 	items: string[];
 }
 
+const SYSTEM_PROMPT = `You clean up terms for Wikipedia lookup. Rules:
+- Convert plural to singular (e.g., "curtains" -> "curtain")
+- Reduce multi-word phrases to the single most relevant word for Wikipedia (e.g., "pink wall" -> "wall" or "pink", whichever makes more sense)
+- Keep proper nouns as-is
+- Return ONLY a JSON object with an "items" array of cleaned terms
+- Maintain the same order as input`;
+
+export const GET: APIRoute = async () => {
+	return new Response(
+		JSON.stringify({
+			endpoint: "/api/clean-terms",
+			description: "Cleans extracted terms for Wikipedia lookup using OpenAI",
+			method: "POST",
+			model: "gpt-4o-mini",
+			systemPrompt: SYSTEM_PROMPT,
+		}),
+		{ status: 200, headers: { "Content-Type": "application/json" } },
+	);
+};
+
 export const POST: APIRoute = async ({ request, locals }) => {
 	if (!validateOrigin(request)) {
 		return createCorsErrorResponse();
@@ -58,12 +78,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			messages: [
 				{
 					role: "system",
-					content: `You clean up terms for Wikipedia lookup. Rules:
-- Convert plural to singular (e.g., "curtains" -> "curtain")
-- Reduce multi-word phrases to the single most relevant word for Wikipedia (e.g., "pink wall" -> "wall" or "pink", whichever makes more sense)
-- Keep proper nouns as-is
-- Return ONLY a JSON object with an "items" array of cleaned terms
-- Maintain the same order as input`,
+					content: SYSTEM_PROMPT,
 				},
 				{
 					role: "user",
