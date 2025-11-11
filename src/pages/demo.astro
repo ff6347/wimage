@@ -26,9 +26,9 @@ import "../styles/shared.css";
 				<div class="loading-spinner"></div>
 				<p id="loadingMessage">Processing...</p>
 			</div>
-
-			<Footer />
 		</div>
+
+		<Footer />
 
 		<div id="visualizationContainer" class="hidden"></div>
 
@@ -42,7 +42,6 @@ import "../styles/shared.css";
 			}
 
 			body {
-				justify-content: center;
 				align-items: center;
 				overflow-y: auto;
 			}
@@ -54,8 +53,8 @@ import "../styles/shared.css";
 				flex-direction: column;
 				gap: 8px;
 				padding: 20px 20px 0 20px;
-				min-height: 100vh;
 				justify-content: center;
+				flex: 1 0 auto;
 			}
 
 			video {
