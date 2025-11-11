@@ -7,6 +7,11 @@
 	box-sizing: border-box;
 }
 
+html {
+	overflow-x: hidden;
+	max-width: 100%;
+}
+
 body {
 	font-family: Avenir, Montserrat, Corbel, "URW Gothic", source-sans-pro,
 		sans-serif;
@@ -16,8 +21,10 @@ body {
 	flex-direction: column;
 	align-items: center;
 	gap: 8px;
-	padding: 20px;
+	padding: 20px 20px 0 20px;
 	min-height: 100vh;
+	overflow-x: hidden;
+	max-width: 100%;
 }
 
 button {

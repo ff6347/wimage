@@ -1,6 +1,7 @@
 ---
 // ABOUTME: Demo page with automatic chained workflow from image capture to visualization
 // ABOUTME: Chains all API calls automatically and displays final result in fullscreen
+import Footer from "../components/Footer.astro";
 import "../styles/shared.css";
 ---
 
@@ -27,6 +28,8 @@ import "../styles/shared.css";
 			</div>
 		</div>
 
+		<Footer />
+
 		<div id="visualizationContainer" class="hidden"></div>
 
 		<style>
@@ -34,12 +37,13 @@ import "../styles/shared.css";
 			body {
 				width: 100%;
 				height: 100%;
+				max-width: 100%;
+				overflow-x: hidden;
 			}
 
 			body {
-				justify-content: center;
 				align-items: center;
-				overflow: auto;
+				overflow-y: auto;
 			}
 
 			.camera-container {
@@ -48,9 +52,9 @@ import "../styles/shared.css";
 				display: flex;
 				flex-direction: column;
 				gap: 8px;
-				padding: 20px;
-				min-height: 100vh;
+				padding: 20px 20px 0 20px;
 				justify-content: center;
+				flex: 1 0 auto;
 			}
 
 			video {
