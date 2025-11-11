@@ -382,7 +382,7 @@
 				throw new Error(data.error || "Term cleaning failed");
 			}
 
-			cleanedTerms = data.cleaned;
+			cleanedTerms = data.data.items;
 
 			cleanedResultsDiv.innerHTML = `
 				<h3>Original Terms:</h3>

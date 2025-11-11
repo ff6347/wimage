@@ -16,7 +16,7 @@ interface CleanTermsRequest {
 }
 
 interface CleanTermsResponse {
-	cleaned: string[];
+	items: string[];
 }
 
 export const POST: APIRoute = async ({ request, locals }) => {
@@ -62,7 +62,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 - Convert plural to singular (e.g., "curtains" -> "curtain")
 - Reduce multi-word phrases to the single most relevant word for Wikipedia (e.g., "pink wall" -> "wall" or "pink", whichever makes more sense)
 - Keep proper nouns as-is
-- Return ONLY a JSON array of cleaned terms, no explanations
+- Return ONLY a JSON object with an "items" array of cleaned terms
 - Maintain the same order as input`,
 				},
 				{
@@ -86,7 +86,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 		return new Response(
 			JSON.stringify({
 				success: true,
-				cleaned: result.cleaned || result,
+				data: result,
 			}),
 			{
 				status: 200,

@@ -316,7 +316,7 @@
 					throw new Error(data.error || "Term cleaning failed");
 				}
 
-				return data.cleaned;
+				return data.data.items;
 			}
 
 			async function checkWikipedia(cleanedTerms: string[]): Promise<string[]> {
