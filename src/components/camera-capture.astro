@@ -25,6 +25,13 @@
 		<div class="result-container" id="extractedResults"></div>
 	</section>
 
+	<section class="clean hidden">
+		<div class="button-container">
+			<button id="cleanTerms">Clean Terms</button>
+		</div>
+		<div class="result-container" id="cleanedResults"></div>
+	</section>
+
 	<section class="wikipedia hidden">
 		<div class="button-container">
 			<button id="checkWikipedia">Check Wikipedia</button>
@@ -189,6 +196,7 @@
 	let capturedBlob: Blob | null = null;
 	let moondreamResult: string | null = null;
 	let extractedData: unknown = null;
+	let cleanedTerms: string[] = [];
 	let wikipediaUrls: string[] = [];
 	let wikiArticles: WikiArticle[] = [];
 	let summaries: Summary[] = [];
@@ -199,6 +207,7 @@
 	const captureBtn = document.getElementById("capture") as HTMLButtonElement;
 	const analyzeBtn = document.getElementById("analyze") as HTMLButtonElement;
 	const extractJsonBtn = document.getElementById("extractJson") as HTMLButtonElement;
+	const cleanTermsBtn = document.getElementById("cleanTerms") as HTMLButtonElement;
 	const checkWikipediaBtn = document.getElementById("checkWikipedia") as HTMLButtonElement;
 	const fetchWikiTextBtn = document.getElementById("fetchWikiText") as HTMLButtonElement;
 	const summarizeTextBtn = document.getElementById("summarizeText") as HTMLButtonElement;
@@ -207,6 +216,7 @@
 
 	const querySection = document.querySelector(".query") as HTMLElement;
 	const extractSection = document.querySelector(".extract") as HTMLElement;
+	const cleanSection = document.querySelector(".clean") as HTMLElement;
 	const wikipediaSection = document.querySelector(".wikipedia") as HTMLElement;
 	const fetchTextSection = document.querySelector(".fetch-text") as HTMLElement;
 	const summarizeSection = document.querySelector(".summarize") as HTMLElement;
@@ -214,6 +224,7 @@
 
 	const resultsDiv = document.getElementById("results") as HTMLDivElement;
 	const extractedResultsDiv = document.getElementById("extractedResults") as HTMLDivElement;
+	const cleanedResultsDiv = document.getElementById("cleanedResults") as HTMLDivElement;
 	const wikipediaResultsDiv = document.getElementById("wikipediaResults") as HTMLDivElement;
 	const wikiTextResultsDiv = document.getElementById("wikiTextResults") as HTMLDivElement;
 	const summaryResultsDiv = document.getElementById("summaryResults") as HTMLDivElement;
@@ -223,7 +234,7 @@
 	document.addEventListener("keydown", (e) => {
 		if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "D") {
 			e.preventDefault();
-			const sections = [querySection, extractSection, wikipediaSection, fetchTextSection, summarizeSection, visualizeSection];
+			const sections = [querySection, extractSection, cleanSection, wikipediaSection, fetchTextSection, summarizeSection, visualizeSection];
 			sections.forEach(section => section.classList.toggle("hidden"));
 		}
 	});
@@ -328,7 +339,7 @@
 			extractedData = data.data;
 
 			extractedResultsDiv.innerHTML = `<h3>Extracted JSON:</h3><pre>${JSON.stringify(data.data, null, 2)}</pre>`;
-			showSection(wikipediaSection);
+			showSection(cleanSection);
 		} catch (error) {
 			setStatus(extractedResultsDiv, `Error: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
 		} finally {
@@ -336,9 +347,9 @@
 		}
 	});
 
-	checkWikipediaBtn.addEventListener("click", async () => {
+	cleanTermsBtn.addEventListener("click", async () => {
 		if (!extractedData) {
-			setStatus(wikipediaResultsDiv, "No extracted data to check", "error");
+			setStatus(cleanedResultsDiv, "No extracted data to clean", "error");
 			return;
 		}
 
@@ -351,14 +362,49 @@
 		}
 
 		if (items.length === 0) {
-			setStatus(wikipediaResultsDiv, "No items found in extracted data", "error");
+			setStatus(cleanedResultsDiv, "No items found in extracted data", "error");
 			return;
 		}
 
-		if (items.length !== 3) {
-			setStatus(wikipediaResultsDiv, "Expected exactly 3 items from extraction", "error");
+		setStatus(cleanedResultsDiv, "Cleaning terms...");
+		cleanTermsBtn.disabled = true;
+
+		try {
+			const response = await fetch("/api/clean-terms", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ items }),
+			});
+
+			const data = await response.json();
+
+			if (!response.ok) {
+				throw new Error(data.error || "Term cleaning failed");
+			}
+
+			cleanedTerms = data.cleaned;
+
+			cleanedResultsDiv.innerHTML = `
+				<h3>Original Terms:</h3>
+				<pre>${JSON.stringify(items, null, 2)}</pre>
+				<h3>Cleaned Terms:</h3>
+				<pre>${JSON.stringify(cleanedTerms, null, 2)}</pre>
+			`;
+			showSection(wikipediaSection);
+		} catch (error) {
+			setStatus(cleanedResultsDiv, `Error: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
+		} finally {
+			cleanTermsBtn.disabled = false;
+		}
+	});
+
+	checkWikipediaBtn.addEventListener("click", async () => {
+		if (cleanedTerms.length === 0) {
+			setStatus(wikipediaResultsDiv, "No cleaned terms to check", "error");
 			return;
 		}
+
+		const items: string[] = cleanedTerms;
 
 		setStatus(wikipediaResultsDiv, "Checking Wikipedia...");
 		checkWikipediaBtn.disabled = true;

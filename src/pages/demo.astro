@@ -213,15 +213,19 @@
 					updateLoadingMessage("Extracting key information...");
 					const extractedData = await extractJson(moondreamResult);
 
-					// Step 3: Check Wikipedia
+					// Step 3: Clean terms
+					updateLoadingMessage("Cleaning terms...");
+					const cleanedTerms = await cleanTerms(extractedData);
+
+					// Step 4: Check Wikipedia
 					updateLoadingMessage("Checking Wikipedia articles...");
-					const wikipediaUrls = await checkWikipedia(extractedData);
+					const wikipediaUrls = await checkWikipedia(cleanedTerms);
 
 					if (wikipediaUrls.length === 0) {
 						throw new Error("No Wikipedia articles found");
 					}
 
-					// Step 4: Fetch Wikipedia text
+					// Step 5: Fetch Wikipedia text
 					updateLoadingMessage("Fetching article content...");
 					const wikiArticles = await fetchWikipediaText(wikipediaUrls);
 
@@ -229,7 +233,7 @@
 						throw new Error("No Wikipedia articles retrieved");
 					}
 
-					// Step 5: Summarize articles
+					// Step 6: Summarize articles
 					updateLoadingMessage("Summarizing articles...");
 					const summaries = await summarizeText(wikiArticles);
 
@@ -237,7 +241,7 @@
 						throw new Error("No summaries generated");
 					}
 
-					// Step 6: Generate visualization
+					// Step 7: Generate visualization
 					updateLoadingMessage("Generating visualization...");
 					const html = await generateVisualization(summaries);
 
@@ -291,14 +295,32 @@
 				return data.data;
 			}
 
-			async function checkWikipedia(extractedData: {
+			async function cleanTerms(extractedData: {
 				items: string[];
 			}): Promise<string[]> {
 				const items = extractedData.items;
 
-				if (!Array.isArray(items) || items.length !== 3) {
-					throw new Error("Expected exactly 3 items from extraction");
+				if (!Array.isArray(items) || items.length === 0) {
+					throw new Error("No items to clean");
 				}
+
+				const response = await fetch("/api/clean-terms", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ items }),
+				});
+
+				const data = await response.json();
+
+				if (!response.ok) {
+					throw new Error(data.error || "Term cleaning failed");
+				}
+
+				return data.cleaned;
+			}
+
+			async function checkWikipedia(cleanedTerms: string[]): Promise<string[]> {
+				const items = cleanedTerms;
 
 				const response = await fetch("/api/check-wikipedia", {
 					method: "POST",
