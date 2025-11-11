@@ -2,7 +2,6 @@
 // ABOUTME: Accepts image data and query, returns detection results
 
 import type { APIRoute } from "astro";
-import { vl } from "moondream";
 import { validateOrigin, createCorsErrorResponse, checkRateLimit, getClientId, createRateLimitErrorResponse } from "../../lib/cors";
 
 export const POST: APIRoute = async ({ request }) => {
@@ -55,27 +54,38 @@ export const POST: APIRoute = async ({ request }) => {
 		console.log("Converting image to base64");
 		const arrayBuffer = await imageFile.arrayBuffer();
 
-		// Convert ArrayBuffer to base64 without using Buffer (Cloudflare Workers compatible)
+		// Convert ArrayBuffer to base64 (Cloudflare Workers compatible)
 		const uint8Array = new Uint8Array(arrayBuffer);
 		let binaryString = '';
 		for (let i = 0; i < uint8Array.length; i++) {
 			binaryString += String.fromCharCode(uint8Array[i]);
 		}
 		const base64Image = btoa(binaryString);
-		const imageUrl = `data:image/jpeg;base64,${base64Image}`;
 
-		console.log("Initializing Moondream model");
-		const model = new vl({ apiKey });
-
-		console.log("Querying Moondream API");
-		const result = await model.query({
-			image: { imageUrl },
-			question: query,
-			stream: false,
+		console.log("Calling Moondream API directly");
+		const moondreamResponse = await fetch("https://api.moondream.ai/v1/query", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				"X-Moondream-Auth": apiKey,
+			},
+			body: JSON.stringify({
+				image_url: `data:image/jpeg;base64,${base64Image}`,
+				question: query,
+				stream: false,
+			}),
 		});
 
+		if (!moondreamResponse.ok) {
+			const errorText = await moondreamResponse.text();
+			console.error("Moondream API error:", moondreamResponse.status, errorText);
+			throw new Error(`Moondream API error: ${moondreamResponse.status} ${errorText}`);
+		}
+
+		const moondreamData = await moondreamResponse.json();
 		console.log("Successfully received result from Moondream");
-		return new Response(JSON.stringify({ result }), {
+
+		return new Response(JSON.stringify({ result: moondreamData.answer }), {
 			status: 200,
 			headers: { "Content-Type": "application/json" },
 		});

@@ -6,7 +6,12 @@
       "WebFetch(domain:docs.moondream.ai)",
       "Bash(npm install:*)",
       "Bash(npm run dev:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(git add:*)",
+      "Bash(git restore:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []
