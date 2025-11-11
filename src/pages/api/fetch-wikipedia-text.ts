@@ -2,6 +2,7 @@
 // ABOUTME: Accepts Wikipedia URLs and returns extracted plain text content
 
 import type { APIRoute } from "astro";
+import { validateOrigin, createCorsErrorResponse, checkRateLimit, getClientId, createRateLimitErrorResponse } from "../../lib/cors";
 
 interface WikipediaPage {
 	pageid?: number;
@@ -30,6 +31,15 @@ const wikiUrlToApiUrl = (url: string): string | null => {
 };
 
 export const POST: APIRoute = async ({ request }) => {
+	if (!validateOrigin(request)) {
+		return createCorsErrorResponse();
+	}
+
+	const clientId = getClientId(request);
+	if (!checkRateLimit(clientId)) {
+		return createRateLimitErrorResponse();
+	}
+
 	try {
 		const body = await request.json();
 		const urls = body.urls;

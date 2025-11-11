@@ -3,8 +3,18 @@
 
 import type { APIRoute } from "astro";
 import OpenAI from "openai";
+import { validateOrigin, createCorsErrorResponse, checkRateLimit, getClientId, createRateLimitErrorResponse } from "../../lib/cors";
 
 export const POST: APIRoute = async ({ request }) => {
+	if (!validateOrigin(request)) {
+		return createCorsErrorResponse();
+	}
+
+	const clientId = getClientId(request);
+	if (!checkRateLimit(clientId)) {
+		return createRateLimitErrorResponse();
+	}
+
 	try {
 		const openaiKey = import.meta.env.OPENAI_API_KEY;
 

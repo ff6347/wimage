@@ -3,8 +3,18 @@
 
 import type { APIRoute } from "astro";
 import { vl } from "moondream";
+import { validateOrigin, createCorsErrorResponse, checkRateLimit, getClientId, createRateLimitErrorResponse } from "../../lib/cors";
 
 export const POST: APIRoute = async ({ request }) => {
+	if (!validateOrigin(request)) {
+		return createCorsErrorResponse();
+	}
+
+	const clientId = getClientId(request);
+	if (!checkRateLimit(clientId)) {
+		return createRateLimitErrorResponse();
+	}
+
 	try {
 		const apiKey = import.meta.env.MOONDREAM_API_KEY;
 

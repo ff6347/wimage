@@ -2,6 +2,7 @@
 // ABOUTME: Accepts array of terms and queries Wikipedia MediaWiki API to check if articles exist
 
 import type { APIRoute } from "astro";
+import { validateOrigin, createCorsErrorResponse, checkRateLimit, getClientId, createRateLimitErrorResponse } from "../../lib/cors";
 
 interface WikipediaPage {
 	pageid?: number;
@@ -17,6 +18,15 @@ interface WikipediaCheckResult {
 }
 
 export const POST: APIRoute = async ({ request }) => {
+	if (!validateOrigin(request)) {
+		return createCorsErrorResponse();
+	}
+
+	const clientId = getClientId(request);
+	if (!checkRateLimit(clientId)) {
+		return createRateLimitErrorResponse();
+	}
+
 	try {
 		const body = await request.json();
 		const items = body.items;
