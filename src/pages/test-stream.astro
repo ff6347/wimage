@@ -1,0 +1,202 @@
+---
+// Test page for streaming summarize endpoint
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Test Streaming Summarize</title>
+		<style>
+			body {
+				font-family: system-ui, -apple-system, sans-serif;
+				max-width: 800px;
+				margin: 0 auto;
+				padding: 2rem;
+				background: #f5f5f5;
+			}
+			h1 {
+				color: #333;
+			}
+			.container {
+				background: white;
+				padding: 2rem;
+				border-radius: 8px;
+				box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+			}
+			textarea {
+				width: 100%;
+				min-height: 150px;
+				padding: 1rem;
+				border: 1px solid #ddd;
+				border-radius: 4px;
+				font-family: inherit;
+				margin-bottom: 1rem;
+			}
+			input[type="text"] {
+				width: 100%;
+				padding: 0.5rem;
+				border: 1px solid #ddd;
+				border-radius: 4px;
+				margin-bottom: 1rem;
+			}
+			button {
+				background: #0066cc;
+				color: white;
+				border: none;
+				padding: 0.75rem 1.5rem;
+				border-radius: 4px;
+				cursor: pointer;
+				font-size: 1rem;
+			}
+			button:hover {
+				background: #0052a3;
+			}
+			button:disabled {
+				background: #ccc;
+				cursor: not-allowed;
+			}
+			.output {
+				margin-top: 2rem;
+				padding: 1rem;
+				background: #f9f9f9;
+				border-radius: 4px;
+				border: 1px solid #ddd;
+				min-height: 100px;
+				white-space: pre-wrap;
+				font-family: inherit;
+			}
+			.status {
+				margin-top: 1rem;
+				padding: 0.5rem;
+				border-radius: 4px;
+				font-size: 0.9rem;
+			}
+			.status.streaming {
+				background: #e3f2fd;
+				color: #1976d2;
+			}
+			.status.complete {
+				background: #e8f5e9;
+				color: #388e3c;
+			}
+			.status.error {
+				background: #ffebee;
+				color: #c62828;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<h1>Test Streaming Summarize API</h1>
+
+			<form id="testForm">
+				<label for="title">Article Title:</label>
+				<input
+					type="text"
+					id="title"
+					name="title"
+					value="Artificial Intelligence"
+					required
+				/>
+
+				<label for="text">Article Text:</label>
+				<textarea id="text" name="text" required>
+Artificial intelligence (AI) is intelligence demonstrated by machines, in contrast to the natural intelligence displayed by humans and animals. Leading AI textbooks define the field as the study of "intelligent agents": any device that perceives its environment and takes actions that maximize its chance of successfully achieving its goals. Colloquially, the term "artificial intelligence" is often used to describe machines (or computers) that mimic "cognitive" functions that humans associate with the human mind, such as "learning" and "problem solving".
+
+As machines become increasingly capable, tasks considered to require "intelligence" are often removed from the definition of AI, a phenomenon known as the AI effect. A quip in Tesler's Theorem says "AI is whatever hasn't been done yet." For instance, optical character recognition is frequently excluded from things considered to be AI, having become a routine technology. Modern machine learning capabilities for natural language processing, image processing, and speech recognition are considered AI because they were goals as late as the 1990s.
+
+Artificial intelligence was founded as an academic discipline in 1956, and in the years since has experienced several waves of optimism, followed by disappointment and the loss of funding (known as an "AI winter"), followed by new approaches, success and renewed funding. AI research has tried and discarded many different approaches since its founding, including simulating the brain, modeling human problem solving, formal logic, large databases of knowledge and imitating animal behavior. In the first decades of the 21st century, highly mathematical statistical machine learning has dominated the field, and this technique has proved highly successful, thus helping to solve many challenging problems throughout industry and academia.
+				</textarea>
+
+				<button type="submit" id="submitBtn">Stream Summary</button>
+			</form>
+
+			<div id="status" class="status" style="display: none;"></div>
+
+			<div class="output" id="output">
+				<em>Summary will appear here as it streams...</em>
+			</div>
+		</div>
+
+		<script>
+			const form = document.getElementById("testForm");
+			const submitBtn = document.getElementById("submitBtn");
+			const output = document.getElementById("output");
+			const statusDiv = document.getElementById("status");
+
+			form.addEventListener("submit", async (e) => {
+				e.preventDefault();
+
+				const title = document.getElementById("title").value;
+				const text = document.getElementById("text").value;
+
+				// Clear previous output
+				output.textContent = "";
+				submitBtn.disabled = true;
+				statusDiv.style.display = "block";
+				statusDiv.className = "status streaming";
+				statusDiv.textContent = "Streaming...";
+
+				try {
+					const response = await fetch("/api/summarize-stream", {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify({
+							article: { title, text },
+						}),
+					});
+
+					if (!response.ok) {
+						throw new Error(`HTTP error! status: ${response.status}`);
+					}
+
+					// Read the stream
+					const reader = response.body.getReader();
+					const decoder = new TextDecoder();
+
+					while (true) {
+						const { done, value } = await reader.read();
+
+						if (done) {
+							statusDiv.className = "status complete";
+							statusDiv.textContent = "✓ Streaming complete!";
+							break;
+						}
+
+						// Decode and append the chunk
+						const chunk = decoder.decode(value, { stream: true });
+
+						// Parse the data stream format (lines starting with "0:")
+						const lines = chunk.split("\n");
+						for (const line of lines) {
+							if (line.startsWith("0:")) {
+								// Extract the JSON content
+								const jsonStr = line.substring(2);
+								try {
+									const data = JSON.parse(jsonStr);
+									if (data.type === "text-delta" && data.textDelta) {
+										output.textContent += data.textDelta;
+									}
+								} catch (e) {
+									// Skip lines that aren't valid JSON
+									console.log("Skipping line:", line);
+								}
+							}
+						}
+					}
+				} catch (error) {
+					console.error("Error:", error);
+					statusDiv.className = "status error";
+					statusDiv.textContent = `Error: ${error.message}`;
+					output.textContent = `Error: ${error.message}`;
+				} finally {
+					submitBtn.disabled = false;
+				}
+			});
+		</script>
+	</body>
+</html>

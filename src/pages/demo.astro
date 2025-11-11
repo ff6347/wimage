@@ -384,29 +384,79 @@ import "../styles/shared.css";
 			async function summarizeText(
 				articles: WikiArticle[],
 			): Promise<Summary[]> {
-				const response = await fetch("/api/summarize-text", {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ articles }),
-				});
-
-				const data = await response.json();
-
-				if (!response.ok) {
-					throw new Error(data.error || "Failed to summarize articles");
-				}
-
 				const summaries: Summary[] = [];
-				for (const result of data.results) {
-					if (!result.error && result.title && result.summary) {
+
+				// Process articles one at a time with streaming
+				for (let i = 0; i < articles.length; i++) {
+					const article = articles[i];
+					updateLoadingMessage(
+						`Summarizing article ${i + 1}/${articles.length}: ${article.title}...`,
+					);
+
+					try {
+						const summary = await summarizeArticleStreaming(article);
 						summaries.push({
-							title: result.title,
-							summary: result.summary,
+							title: article.title,
+							summary: summary,
 						});
+					} catch (error) {
+						console.error(`Failed to summarize ${article.title}:`, error);
+						// Continue with next article instead of failing completely
 					}
 				}
 
 				return summaries;
+			}
+
+			async function summarizeArticleStreaming(
+				article: WikiArticle,
+			): Promise<string> {
+				const response = await fetch("/api/summarize-stream", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ article }),
+				});
+
+				if (!response.ok) {
+					throw new Error(`Failed to summarize ${article.title}`);
+				}
+
+				// Read the stream and accumulate the text
+				const reader = response.body?.getReader();
+				if (!reader) {
+					throw new Error("No response body reader available");
+				}
+
+				const decoder = new TextDecoder();
+				let fullText = "";
+
+				while (true) {
+					const { done, value } = await reader.read();
+
+					if (done) break;
+
+					// Decode the chunk
+					const chunk = decoder.decode(value, { stream: true });
+
+					// Parse the Vercel AI SDK data stream format
+					const lines = chunk.split("\n");
+					for (const line of lines) {
+						if (line.startsWith("0:")) {
+							// Extract the JSON content
+							const jsonStr = line.substring(2);
+							try {
+								const data = JSON.parse(jsonStr);
+								if (data.type === "text-delta" && data.textDelta) {
+									fullText += data.textDelta;
+								}
+							} catch (e) {
+								// Skip lines that aren't valid JSON
+							}
+						}
+					}
+				}
+
+				return fullText.trim();
 			}
 
 			async function generateVisualization(
