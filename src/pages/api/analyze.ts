@@ -16,58 +16,77 @@ export const POST: APIRoute = async ({ request }) => {
 	}
 
 	try {
+		console.log("Starting image analysis request");
+
 		const apiKey = import.meta.env.MOONDREAM_API_KEY;
 
 		if (!apiKey) {
+			console.error("MOONDREAM_API_KEY not configured");
 			return new Response(
 				JSON.stringify({ error: "MOONDREAM_API_KEY not configured" }),
 				{ status: 500, headers: { "Content-Type": "application/json" } },
 			);
 		}
 
+		console.log("Parsing form data");
 		const formData = await request.formData();
 		const imageFile = formData.get("image") as File;
 		const query =
 			'write a description of what you see. Point out exactly three things in one word. I only want JSON output. Don\'t add any newlines make it as compact as possible. Make it an array ```ts type result:string[] = ["item 1", "item 2", "item 3"] ```';
 
 		if (!imageFile) {
+			console.error("No image provided in form data");
 			return new Response(JSON.stringify({ error: "No image provided" }), {
 				status: 400,
 				headers: { "Content-Type": "application/json" },
 			});
 		}
 
+		console.log("Image file received:", imageFile.name, imageFile.type, imageFile.size);
+
 		if (!query) {
+			console.error("No query provided");
 			return new Response(JSON.stringify({ error: "No query provided" }), {
 				status: 400,
 				headers: { "Content-Type": "application/json" },
 			});
 		}
 
+		console.log("Converting image to base64");
 		const arrayBuffer = await imageFile.arrayBuffer();
-		const imageBuffer = Buffer.from(arrayBuffer);
 
-		const model = new vl({ apiKey });
-
-		const base64Image = imageBuffer.toString("base64");
+		// Convert ArrayBuffer to base64 without using Buffer (Cloudflare Workers compatible)
+		const uint8Array = new Uint8Array(arrayBuffer);
+		let binaryString = '';
+		for (let i = 0; i < uint8Array.length; i++) {
+			binaryString += String.fromCharCode(uint8Array[i]);
+		}
+		const base64Image = btoa(binaryString);
 		const imageUrl = `data:image/jpeg;base64,${base64Image}`;
 
+		console.log("Initializing Moondream model");
+		const model = new vl({ apiKey });
+
+		console.log("Querying Moondream API");
 		const result = await model.query({
 			image: { imageUrl },
 			question: query,
 			stream: false,
 		});
 
+		console.log("Successfully received result from Moondream");
 		return new Response(JSON.stringify({ result }), {
 			status: 200,
 			headers: { "Content-Type": "application/json" },
 		});
 	} catch (error) {
 		console.error("Error analyzing image:", error);
+		console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
 		return new Response(
 			JSON.stringify({
 				error: "Failed to analyze image",
 				details: error instanceof Error ? error.message : "Unknown error",
+				stack: error instanceof Error ? error.stack : undefined,
 			}),
 			{ status: 500, headers: { "Content-Type": "application/json" } },
 		);
