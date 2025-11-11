@@ -72,7 +72,11 @@ Requirements:
 -  Include all CSS inline in a <style> tag - no external stylesheets
 -  Use creative spatial typography - vary font sizes, positions, rotations, and layouts
 - You are specialized in generative typographic art.
-- Use diffenrent fonts.
+- Use only one font but vary weights and sizes.
+- Use absolute positioning for layout.
+- No images or illustrations, only text-based design.
+- Focus on experimental and artistic layouts.
+- Avoid traditional article structures.
 - Create unique, artistic HTML pages with experimental spatial layouts.
 - No need to use all the text.
 - Simplify and abstract the information to create a visual experience.
