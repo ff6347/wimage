@@ -21,13 +21,13 @@
 				<button id="capture" disabled>Capture Image</button>
 			</div>
 
-			<div class="loading-section" id="loadingSection" style="display: none;">
+			<div class="loading-section hidden" id="loadingSection">
 				<div class="loading-spinner"></div>
 				<p id="loadingMessage">Processing...</p>
 			</div>
 		</div>
 
-		<div id="visualizationContainer" style="display: none;"></div>
+		<div id="visualizationContainer" class="hidden"></div>
 
 		<style>
 			html,
@@ -156,7 +156,7 @@
 			}
 
 			function showLoading() {
-				loadingSection.style.display = "block";
+				loadingSection.classList.remove("hidden");
 			}
 
 			function hideCamera() {
@@ -438,7 +438,7 @@
 				iframe.style.padding = "0";
 				iframe.style.display = "block";
 				visualizationContainer.appendChild(iframe);
-				visualizationContainer.style.display = "block";
+				visualizationContainer.classList.remove("hidden");
 			}
 		</script>
 	</body>
