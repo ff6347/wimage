@@ -280,6 +280,12 @@
 	const summarizeApiInfoDiv = document.getElementById("summarizeApiInfo") as HTMLDivElement;
 	const visualizeApiInfoDiv = document.getElementById("visualizeApiInfo") as HTMLDivElement;
 
+	function escapeHtml(text: string): string {
+		const div = document.createElement('div');
+		div.textContent = text;
+		return div.innerHTML;
+	}
+
 	async function fetchAndDisplayApiInfo(endpoint: string, infoDiv: HTMLElement) {
 		try {
 			const response = await fetch(endpoint);
@@ -296,11 +302,11 @@
 			}
 
 			if (info.systemPrompt) {
-				html += `<div class="prompt">${info.systemPrompt}</div>`;
+				html += `<div class="prompt">${escapeHtml(info.systemPrompt)}</div>`;
 			}
 
 			if (info.query) {
-				html += `<div class="prompt">${info.query}</div>`;
+				html += `<div class="prompt">${escapeHtml(info.query)}</div>`;
 			}
 
 			infoDiv.innerHTML = html;
