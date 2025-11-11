@@ -17,6 +17,12 @@ import CameraCapture from "../components/camera-capture.astro";
 			Capture an image from your camera and and we tell you something about it
 		</p>
 		<CameraCapture />
+
+		<section class="api-info hidden" id="apiInfo">
+			<h2>API Workflow</h2>
+			<button id="toggleApiInfo">Show API Details</button>
+			<div class="api-endpoints hidden" id="apiEndpoints"></div>
+		</section>
 	</body>
 </html>
 
@@ -28,4 +34,134 @@ import CameraCapture from "../components/camera-capture.astro";
 	p {
 		color: #666;
 	}
+
+	.api-info {
+		width: 640px;
+		max-width: 100%;
+		margin-top: 40px;
+	}
+
+	.api-info h2 {
+		color: #333;
+		margin-bottom: 16px;
+	}
+
+	#toggleApiInfo {
+		margin-bottom: 16px;
+	}
+
+	.api-endpoints {
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+	}
+
+	.endpoint {
+		padding: 20px;
+		background-color: lightgray;
+	}
+
+	.endpoint h3 {
+		margin: 0 0 8px 0;
+		color: #0066cc;
+	}
+
+	.endpoint p {
+		margin: 4px 0;
+		color: #333;
+	}
+
+	.endpoint .prompt {
+		margin-top: 8px;
+		padding: 12px;
+		background-color: white;
+		font-family: monospace;
+		font-size: 14px;
+		white-space: pre-wrap;
+		word-wrap: break-word;
+	}
 </style>
+
+<script>
+	const toggleBtn = document.getElementById("toggleApiInfo") as HTMLButtonElement;
+	const apiEndpointsDiv = document.getElementById("apiEndpoints") as HTMLDivElement;
+	const apiInfoSection = document.getElementById("apiInfo") as HTMLElement;
+
+	const endpoints = [
+		"/api/analyze",
+		"/api/extract-json",
+		"/api/clean-terms",
+		"/api/check-wikipedia",
+		"/api/fetch-wikipedia-text",
+		"/api/summarize-text",
+		"/api/generate-visualization",
+	];
+
+	let isVisible = false;
+	let dataLoaded = false;
+
+	apiInfoSection.classList.remove("hidden");
+
+	toggleBtn.addEventListener("click", async () => {
+		if (!dataLoaded) {
+			apiEndpointsDiv.innerHTML = "<p>Loading API information...</p>";
+			apiEndpointsDiv.classList.remove("hidden");
+
+			try {
+				const responses = await Promise.all(
+					endpoints.map(endpoint => fetch(endpoint))
+				);
+				const data = await Promise.all(
+					responses.map(r => r.json())
+				);
+
+				apiEndpointsDiv.innerHTML = "";
+				data.forEach((info) => {
+					const endpointDiv = document.createElement("div");
+					endpointDiv.className = "endpoint";
+
+					let html = `<h3>${info.endpoint}</h3>`;
+					html += `<p><strong>Description:</strong> ${info.description}</p>`;
+					html += `<p><strong>Method:</strong> ${info.method}</p>`;
+
+					if (info.model) {
+						html += `<p><strong>Model:</strong> ${info.model}</p>`;
+					}
+
+					if (info.apiUsed) {
+						html += `<p><strong>API Used:</strong> ${info.apiUsed}</p>`;
+					}
+
+					if (info.systemPrompt) {
+						html += `<div class="prompt"><strong>System Prompt:</strong><br>${info.systemPrompt}</div>`;
+					}
+
+					if (info.query) {
+						html += `<div class="prompt"><strong>Query:</strong><br>${info.query}</div>`;
+					}
+
+					endpointDiv.innerHTML = html;
+					apiEndpointsDiv.appendChild(endpointDiv);
+				});
+
+				dataLoaded = true;
+			} catch (error) {
+				apiEndpointsDiv.innerHTML = `<p style="color: #d32f2f;">Error loading API information: ${error instanceof Error ? error.message : "Unknown error"}</p>`;
+			}
+		} else {
+			isVisible = !isVisible;
+			if (isVisible) {
+				apiEndpointsDiv.classList.remove("hidden");
+				toggleBtn.textContent = "Hide API Details";
+			} else {
+				apiEndpointsDiv.classList.add("hidden");
+				toggleBtn.textContent = "Show API Details";
+			}
+		}
+
+		if (!isVisible && dataLoaded) {
+			isVisible = true;
+			toggleBtn.textContent = "Hide API Details";
+		}
+	});
+</script>
