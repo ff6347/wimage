@@ -1,0 +1,199 @@
+{
+	"nodes": [
+		{
+			"id": "camera-input",
+			"x": -800,
+			"y": 0,
+			"width": 250,
+			"height": 80,
+			"type": "text",
+			"text": "**User Camera**\nCapture image from webcam"
+		},
+		{
+			"id": "moondream-analyze",
+			"x": -450,
+			"y": 0,
+			"width": 250,
+			"height": 100,
+			"type": "text",
+			"text": "**Moondream Vision AI**\n/api/analyze\nDescribe image, identify 3 items"
+		},
+		{
+			"id": "extract-json",
+			"x": -100,
+			"y": 0,
+			"width": 250,
+			"height": 100,
+			"type": "text",
+			"text": "**Extract JSON**\n/api/extract-json\nGPT-4o-mini: Parse items to array"
+		},
+		{
+			"id": "clean-terms",
+			"x": 250,
+			"y": 0,
+			"width": 250,
+			"height": 100,
+			"type": "text",
+			"text": "**Clean Terms**\n/api/clean-terms\nGPT-4o-mini: Normalize for Wikipedia"
+		},
+		{
+			"id": "check-wikipedia",
+			"x": 600,
+			"y": 0,
+			"width": 250,
+			"height": 100,
+			"type": "text",
+			"text": "**Check Wikipedia**\n/api/check-wikipedia\nFind existing articles"
+		},
+		{
+			"id": "fetch-text",
+			"x": 950,
+			"y": 0,
+			"width": 250,
+			"height": 100,
+			"type": "text",
+			"text": "**Fetch Article Text**\n/api/fetch-wikipedia-text\nRetrieve full article content"
+		},
+		{
+			"id": "summarize",
+			"x": 600,
+			"y": 200,
+			"width": 250,
+			"height": 100,
+			"type": "text",
+			"text": "**Summarize**\n/api/summarize-text\nGPT-5: Extract key facts"
+		},
+		{
+			"id": "visualize",
+			"x": 250,
+			"y": 200,
+			"width": 250,
+			"height": 120,
+			"type": "text",
+			"text": "**Generate Visualization**\n/api/generate-visualization\nGPT-5: Create expressive typography HTML"
+		},
+		{
+			"id": "display",
+			"x": -100,
+			"y": 200,
+			"width": 250,
+			"height": 80,
+			"type": "text",
+			"text": "**Display Result**\nShow creative visualization to user"
+		},
+		{
+			"id": "user-actions",
+			"x": -800,
+			"y": -200,
+			"width": 250,
+			"height": 120,
+			"type": "text",
+			"text": "**User Actions**\n• Start camera\n• Capture image\n• Trigger analysis\n• View results at each step"
+		},
+		{
+			"id": "api-transparency",
+			"x": -450,
+			"y": -200,
+			"width": 250,
+			"height": 120,
+			"type": "text",
+			"text": "**API Transparency**\nGET endpoints expose:\n• System prompts\n• Model info\n• API descriptions"
+		},
+		{
+			"id": "rate-limiting",
+			"x": -100,
+			"y": -200,
+			"width": 250,
+			"height": 100,
+			"type": "text",
+			"text": "**Rate Limiting**\nCORS validation\nClient-based throttling"
+		}
+	],
+	"edges": [
+		{
+			"id": "edge-1",
+			"fromNode": "camera-input",
+			"fromSide": "right",
+			"toNode": "moondream-analyze",
+			"toSide": "left",
+			"label": "image blob"
+		},
+		{
+			"id": "edge-2",
+			"fromNode": "moondream-analyze",
+			"fromSide": "right",
+			"toNode": "extract-json",
+			"toSide": "left",
+			"label": "description text"
+		},
+		{
+			"id": "edge-3",
+			"fromNode": "extract-json",
+			"fromSide": "right",
+			"toNode": "clean-terms",
+			"toSide": "left",
+			"label": "raw items array"
+		},
+		{
+			"id": "edge-4",
+			"fromNode": "clean-terms",
+			"fromSide": "right",
+			"toNode": "check-wikipedia",
+			"toSide": "left",
+			"label": "cleaned terms"
+		},
+		{
+			"id": "edge-5",
+			"fromNode": "check-wikipedia",
+			"fromSide": "right",
+			"toNode": "fetch-text",
+			"toSide": "left",
+			"label": "article URLs"
+		},
+		{
+			"id": "edge-6",
+			"fromNode": "fetch-text",
+			"fromSide": "bottom",
+			"toNode": "summarize",
+			"toSide": "top",
+			"label": "full text"
+		},
+		{
+			"id": "edge-7",
+			"fromNode": "summarize",
+			"fromSide": "left",
+			"toNode": "visualize",
+			"toSide": "right",
+			"label": "summaries"
+		},
+		{
+			"id": "edge-8",
+			"fromNode": "visualize",
+			"fromSide": "left",
+			"toNode": "display",
+			"toSide": "right",
+			"label": "HTML document"
+		},
+		{
+			"id": "edge-9",
+			"fromNode": "user-actions",
+			"fromSide": "bottom",
+			"toNode": "camera-input",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-10",
+			"fromNode": "api-transparency",
+			"fromSide": "bottom",
+			"toNode": "moondream-analyze",
+			"toSide": "top"
+		},
+		{
+			"id": "edge-11",
+			"fromNode": "rate-limiting",
+			"fromSide": "bottom",
+			"toNode": "extract-json",
+			"toSide": "top"
+		}
+	]
+}
