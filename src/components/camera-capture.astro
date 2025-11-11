@@ -1,0 +1,678 @@
+<!-- ABOUTME: Camera capture component that accesses webcam and sends images to Moondream API --><!-- ABOUTME: Handles video stream, image capture, and query submission -->
+<div class="camera-container">
+	<video id="video" autoplay playsinline></video>
+	<canvas id="canvas" style="display: none;"></canvas>
+
+	<div class="controls">
+		<button id="startCamera">Start Camera</button>
+		<button id="capture" disabled>Capture Image</button>
+	</div>
+
+	<div class="query-section" style="display: none;">
+		<img id="capturedImage" alt="Captured image" />
+		<!-- <input
+      type="text"
+      id="query"
+      placeholder="What do you want to know about this image?"
+      value="What do you see?"
+    /> -->
+		<button id="analyze">Analyze</button>
+	</div>
+
+	<div class="results" id="results"></div>
+
+	<div class="extract-section" style="display: none;">
+		<button id="extractJson">Extract JSON</button>
+		<div class="extracted-results" id="extractedResults"></div>
+	</div>
+
+	<div class="wikipedia-section" style="display: none;">
+		<button id="checkWikipedia">Check Wikipedia</button>
+		<div class="wikipedia-results" id="wikipediaResults"></div>
+	</div>
+
+	<div class="fetch-text-section" style="display: none;">
+		<button id="fetchWikiText">Fetch Wikipedia Text</button>
+		<div class="wiki-text-results" id="wikiTextResults"></div>
+	</div>
+
+	<div class="summarize-section" style="display: none;">
+		<button id="summarizeText">Summarize Articles</button>
+		<div class="summary-results" id="summaryResults"></div>
+	</div>
+
+	<div class="visualize-section" style="display: none;">
+		<button id="visualizeText">Visualize Summaries</button>
+		<div id="iframeContainer"></div>
+	</div>
+</div>
+
+<style>
+	.camera-container {
+		max-width: 800px;
+		margin: 0 auto;
+		padding: 20px;
+	}
+
+	video {
+		width: 100%;
+		max-width: 640px;
+		border: 2px solid #333;
+		border-radius: 8px;
+	}
+
+	.controls {
+		margin: 20px 0;
+		display: flex;
+		gap: 10px;
+	}
+
+	button {
+		padding: 10px 20px;
+		font-size: 16px;
+		cursor: pointer;
+		background-color: #0066cc;
+		color: white;
+		border: none;
+		border-radius: 4px;
+	}
+
+	button:disabled {
+		background-color: #ccc;
+		cursor: not-allowed;
+	}
+
+	button:hover:not(:disabled) {
+		background-color: #0052a3;
+	}
+
+	.query-section {
+		margin: 20px 0;
+	}
+
+	.query-section img {
+		max-width: 100%;
+		border: 2px solid #333;
+		border-radius: 8px;
+		margin-bottom: 10px;
+	}
+
+	input[type="text"] {
+		width: 100%;
+		padding: 10px;
+		font-size: 16px;
+		margin-bottom: 10px;
+		border: 1px solid #ccc;
+		border-radius: 4px;
+	}
+
+	.results {
+		margin-top: 20px;
+		padding: 20px;
+		background-color: #f5f5f5;
+		border-radius: 8px;
+		min-height: 50px;
+	}
+
+	.extract-section {
+		margin-top: 20px;
+	}
+
+	.extracted-results {
+		margin-top: 20px;
+		padding: 20px;
+		background-color: #e8f5e9;
+		border-radius: 8px;
+		min-height: 50px;
+	}
+
+	.wikipedia-section {
+		margin-top: 20px;
+	}
+
+	.wikipedia-results {
+		margin-top: 20px;
+		padding: 20px;
+		background-color: #e3f2fd;
+		border-radius: 8px;
+		min-height: 50px;
+	}
+
+	.wikipedia-results a {
+		color: #1976d2;
+		text-decoration: none;
+	}
+
+	.wikipedia-results a:hover {
+		text-decoration: underline;
+	}
+
+	.fetch-text-section {
+		margin-top: 20px;
+	}
+
+	.wiki-text-results {
+		margin-top: 20px;
+		padding: 20px;
+		background-color: #fff3e0;
+		border-radius: 8px;
+		min-height: 50px;
+	}
+
+	.wiki-text-results details {
+		margin: 10px 0;
+		padding: 10px;
+		background-color: white;
+		border-radius: 4px;
+		border: 1px solid #ddd;
+	}
+
+	.wiki-text-results summary {
+		cursor: pointer;
+		font-weight: bold;
+		padding: 5px;
+	}
+
+	.wiki-text-results summary:hover {
+		background-color: #f5f5f5;
+	}
+
+	.wiki-text-results pre {
+		white-space: pre-wrap;
+		word-wrap: break-word;
+		margin-top: 10px;
+		font-size: 14px;
+		line-height: 1.4;
+	}
+
+	.summarize-section {
+		margin-top: 20px;
+	}
+
+	.summary-results {
+		margin-top: 20px;
+		padding: 20px;
+		background-color: #f3e5f5;
+		border-radius: 8px;
+		min-height: 50px;
+	}
+
+	.summary-results .summary-item {
+		margin: 15px 0;
+		padding: 15px;
+		background-color: white;
+		border-radius: 4px;
+		border-left: 4px solid #9c27b0;
+	}
+
+	.summary-results .summary-item h4 {
+		margin: 0 0 10px 0;
+		color: #7b1fa2;
+	}
+
+	.summary-results .summary-item p {
+		margin: 0;
+		line-height: 1.6;
+		color: #333;
+	}
+
+	.visualize-section {
+		margin-top: 20px;
+	}
+
+	#iframeContainer {
+		margin-top: 20px;
+		display: none;
+	}
+
+	#iframeContainer iframe {
+		width: 100%;
+		min-height: 600px;
+		border: 4px solid #667eea;
+		border-radius: 12px;
+		box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+	}
+
+	.error {
+		color: #d32f2f;
+		font-weight: bold;
+	}
+
+	.success {
+		color: #388e3c;
+	}
+</style>
+
+<script>
+	interface WikiArticle {
+		title: string;
+		text: string;
+	}
+
+	interface Summary {
+		title: string;
+		summary: string;
+	}
+
+	let stream: MediaStream | null = null;
+	let capturedBlob: Blob | null = null;
+	let moondreamResult: string | null = null;
+	let extractedData: unknown = null;
+	let wikipediaUrls: string[] = [];
+	let wikiArticles: WikiArticle[] = [];
+	let summaries: Summary[] = [];
+
+	const video = document.getElementById("video") as HTMLVideoElement;
+	const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+	const startCameraBtn = document.getElementById(
+		"startCamera",
+	) as HTMLButtonElement;
+	const captureBtn = document.getElementById("capture") as HTMLButtonElement;
+	const analyzeBtn = document.getElementById("analyze") as HTMLButtonElement;
+	const extractJsonBtn = document.getElementById("extractJson") as HTMLButtonElement;
+	const checkWikipediaBtn = document.getElementById("checkWikipedia") as HTMLButtonElement;
+	const fetchWikiTextBtn = document.getElementById("fetchWikiText") as HTMLButtonElement;
+	const summarizeTextBtn = document.getElementById("summarizeText") as HTMLButtonElement;
+	const visualizeTextBtn = document.getElementById("visualizeText") as HTMLButtonElement;
+	// const queryInput = document.getElementById("query") as HTMLInputElement;
+	const capturedImage = document.getElementById(
+		"capturedImage",
+	) as HTMLImageElement;
+	const querySection = document.querySelector(
+		".query-section",
+	) as HTMLDivElement;
+	const extractSection = document.querySelector(
+		".extract-section",
+	) as HTMLDivElement;
+	const wikipediaSection = document.querySelector(
+		".wikipedia-section",
+	) as HTMLDivElement;
+	const fetchTextSection = document.querySelector(
+		".fetch-text-section",
+	) as HTMLDivElement;
+	const summarizeSection = document.querySelector(
+		".summarize-section",
+	) as HTMLDivElement;
+	const visualizeSection = document.querySelector(
+		".visualize-section",
+	) as HTMLDivElement;
+	const resultsDiv = document.getElementById("results") as HTMLDivElement;
+	const extractedResultsDiv = document.getElementById("extractedResults") as HTMLDivElement;
+	const wikipediaResultsDiv = document.getElementById("wikipediaResults") as HTMLDivElement;
+	const wikiTextResultsDiv = document.getElementById("wikiTextResults") as HTMLDivElement;
+	const summaryResultsDiv = document.getElementById("summaryResults") as HTMLDivElement;
+	const iframeContainer = document.getElementById("iframeContainer") as HTMLDivElement;
+
+	startCameraBtn.addEventListener("click", async () => {
+		try {
+			stream = await navigator.mediaDevices.getUserMedia({
+				video: { facingMode: "user" },
+			});
+			video.srcObject = stream;
+			captureBtn.disabled = false;
+			startCameraBtn.disabled = true;
+			resultsDiv.textContent = "Camera started successfully";
+			resultsDiv.className = "results success";
+		} catch (error) {
+			resultsDiv.textContent = `Error accessing camera: ${error instanceof Error ? error.message : "Unknown error"}`;
+			resultsDiv.className = "results error";
+		}
+	});
+
+	captureBtn.addEventListener("click", () => {
+		const context = canvas.getContext("2d");
+		if (!context) return;
+
+		canvas.width = video.videoWidth;
+		canvas.height = video.videoHeight;
+		context.drawImage(video, 0, 0);
+
+		canvas.toBlob((blob) => {
+			if (blob) {
+				capturedBlob = blob;
+				capturedImage.src = URL.createObjectURL(blob);
+				querySection.style.display = "block";
+				resultsDiv.textContent =
+					"Image captured! Enter your query and click Analyze.";
+				resultsDiv.className = "results success";
+			}
+		}, "image/jpeg");
+	});
+
+	analyzeBtn.addEventListener("click", async () => {
+		if (!capturedBlob) {
+			resultsDiv.textContent = "No image captured";
+			resultsDiv.className = "results error";
+			return;
+		}
+
+		// const query = queryInput.value.trim();
+		// if (!query) {
+		// 	resultsDiv.textContent = "Please enter a query";
+		// 	resultsDiv.className = "results error";
+		// 	return;
+		// }
+
+		resultsDiv.textContent = "Analyzing...";
+		resultsDiv.className = "results";
+		analyzeBtn.disabled = true;
+
+		try {
+			const formData = new FormData();
+			formData.append("image", capturedBlob, "capture.jpg");
+			// formData.append("query", query);
+
+			const response = await fetch("/api/analyze", {
+				method: "POST",
+				body: formData,
+			});
+
+			const data = await response.json();
+
+			if (!response.ok) {
+				throw new Error(data.error || "Analysis failed");
+			}
+
+			// Store the result - could be a string or an object with a result property
+			moondreamResult = typeof data.result === 'string' ? data.result : JSON.stringify(data.result);
+
+			resultsDiv.innerHTML = `
+        <h3>Results:</h3>
+        <pre>${JSON.stringify(data.result, null, 2)}</pre>
+      `;
+			resultsDiv.className = "results success";
+			extractSection.style.display = "block";
+		} catch (error) {
+			resultsDiv.textContent = `Error: ${error instanceof Error ? error.message : "Unknown error"}`;
+			resultsDiv.className = "results error";
+		} finally {
+			analyzeBtn.disabled = false;
+		}
+	});
+
+	extractJsonBtn.addEventListener("click", async () => {
+		if (!moondreamResult) {
+			extractedResultsDiv.textContent = "No Moondream result to extract";
+			extractedResultsDiv.className = "extracted-results error";
+			return;
+		}
+
+		console.log("Sending to extract-json:", moondreamResult);
+
+		extractedResultsDiv.textContent = "Extracting JSON...";
+		extractedResultsDiv.className = "extracted-results";
+		extractJsonBtn.disabled = true;
+
+		try {
+			const response = await fetch("/api/extract-json", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ result: moondreamResult }),
+			});
+
+			const data = await response.json();
+
+			if (!response.ok) {
+				throw new Error(data.error || "Extraction failed");
+			}
+
+			extractedData = data.data;
+
+			extractedResultsDiv.innerHTML = `
+        <h3>Extracted JSON:</h3>
+        <pre>${JSON.stringify(data.data, null, 2)}</pre>
+      `;
+			extractedResultsDiv.className = "extracted-results success";
+			wikipediaSection.style.display = "block";
+		} catch (error) {
+			extractedResultsDiv.textContent = `Error: ${error instanceof Error ? error.message : "Unknown error"}`;
+			extractedResultsDiv.className = "extracted-results error";
+		} finally {
+			extractJsonBtn.disabled = false;
+		}
+	});
+
+	checkWikipediaBtn.addEventListener("click", async () => {
+		if (!extractedData) {
+			wikipediaResultsDiv.textContent = "No extracted data to check";
+			wikipediaResultsDiv.className = "wikipedia-results error";
+			return;
+		}
+
+		// Extract items array from the structured schema
+		let items: string[] = [];
+		if (typeof extractedData === 'object' && extractedData !== null) {
+			const dataObj = extractedData as { items?: string[] };
+			if (dataObj.items && Array.isArray(dataObj.items)) {
+				items = dataObj.items;
+			}
+		}
+
+		if (items.length === 0) {
+			wikipediaResultsDiv.textContent = "No items found in extracted data";
+			wikipediaResultsDiv.className = "wikipedia-results error";
+			return;
+		}
+
+		if (items.length !== 3) {
+			wikipediaResultsDiv.textContent = "Expected exactly 3 items from extraction";
+			wikipediaResultsDiv.className = "wikipedia-results error";
+			return;
+		}
+
+		wikipediaResultsDiv.textContent = "Checking Wikipedia...";
+		wikipediaResultsDiv.className = "wikipedia-results";
+		checkWikipediaBtn.disabled = true;
+
+		try {
+			const response = await fetch("/api/check-wikipedia", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ items }),
+			});
+
+			const data = await response.json();
+
+			if (!response.ok) {
+				throw new Error(data.error || "Wikipedia check failed");
+			}
+
+			wikipediaUrls = [];
+			let resultsHtml = "<h3>Wikipedia Results:</h3><ul>";
+			for (const result of data.results) {
+				if (result.exists) {
+					wikipediaUrls.push(result.url);
+					resultsHtml += `<li><strong>${result.term}</strong>: <a href="${result.url}" target="_blank">Article exists</a></li>`;
+				} else {
+					resultsHtml += `<li><strong>${result.term}</strong>: No article found</li>`;
+				}
+			}
+			resultsHtml += "</ul>";
+
+			wikipediaResultsDiv.innerHTML = resultsHtml;
+			wikipediaResultsDiv.className = "wikipedia-results success";
+
+			if (wikipediaUrls.length > 0) {
+				fetchTextSection.style.display = "block";
+			}
+		} catch (error) {
+			wikipediaResultsDiv.textContent = `Error: ${error instanceof Error ? error.message : "Unknown error"}`;
+			wikipediaResultsDiv.className = "wikipedia-results error";
+		} finally {
+			checkWikipediaBtn.disabled = false;
+		}
+	});
+
+	fetchWikiTextBtn.addEventListener("click", async () => {
+		if (wikipediaUrls.length === 0) {
+			wikiTextResultsDiv.textContent = "No Wikipedia URLs to fetch";
+			wikiTextResultsDiv.className = "wiki-text-results error";
+			return;
+		}
+
+		wikiTextResultsDiv.textContent = "Fetching Wikipedia article text...";
+		wikiTextResultsDiv.className = "wiki-text-results";
+		fetchWikiTextBtn.disabled = true;
+
+		try {
+			const response = await fetch("/api/fetch-wikipedia-text", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ urls: wikipediaUrls }),
+			});
+
+			const data = await response.json();
+
+			if (!response.ok) {
+				throw new Error(data.error || "Failed to fetch Wikipedia text");
+			}
+
+			wikiArticles = [];
+			let resultsHtml = "<h3>Wikipedia Article Text:</h3>";
+			for (const result of data.results) {
+				if (result.error) {
+					resultsHtml += `<details><summary>${result.url} - Error</summary><p>${result.error}</p></details>`;
+				} else {
+					wikiArticles.push({
+						title: result.title,
+						text: result.text
+					});
+					resultsHtml += `
+						<details>
+							<summary>${result.title || result.url}</summary>
+							<p><strong>Preview:</strong></p>
+							<pre>${result.preview || ""}</pre>
+							<p><strong>Full Text:</strong></p>
+							<pre>${result.text || ""}</pre>
+						</details>
+					`;
+				}
+			}
+
+			wikiTextResultsDiv.innerHTML = resultsHtml;
+			wikiTextResultsDiv.className = "wiki-text-results success";
+
+			if (wikiArticles.length > 0) {
+				summarizeSection.style.display = "block";
+			}
+		} catch (error) {
+			wikiTextResultsDiv.textContent = `Error: ${error instanceof Error ? error.message : "Unknown error"}`;
+			wikiTextResultsDiv.className = "wiki-text-results error";
+		} finally {
+			fetchWikiTextBtn.disabled = false;
+		}
+	});
+
+	summarizeTextBtn.addEventListener("click", async () => {
+		if (wikiArticles.length === 0) {
+			summaryResultsDiv.textContent = "No articles to summarize";
+			summaryResultsDiv.className = "summary-results error";
+			return;
+		}
+
+		summaryResultsDiv.textContent = "Summarizing articles...";
+		summaryResultsDiv.className = "summary-results";
+		summarizeTextBtn.disabled = true;
+
+		try {
+			const response = await fetch("/api/summarize-text", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ articles: wikiArticles }),
+			});
+
+			const data = await response.json();
+
+			if (!response.ok) {
+				throw new Error(data.error || "Failed to summarize articles");
+			}
+
+			summaries = [];
+			let resultsHtml = "<h3>Article Summaries:</h3>";
+			for (const result of data.results) {
+				if (result.error) {
+					resultsHtml += `
+						<div class="summary-item">
+							<h4>${result.title}</h4>
+							<p style="color: #d32f2f;">${result.error}</p>
+						</div>
+					`;
+				} else {
+					summaries.push({
+						title: result.title,
+						summary: result.summary
+					});
+					resultsHtml += `
+						<div class="summary-item">
+							<h4>${result.title}</h4>
+							<p>${result.summary}</p>
+						</div>
+					`;
+				}
+			}
+
+			summaryResultsDiv.innerHTML = resultsHtml;
+			summaryResultsDiv.className = "summary-results success";
+
+			if (summaries.length > 0) {
+				visualizeSection.style.display = "block";
+			}
+		} catch (error) {
+			summaryResultsDiv.textContent = `Error: ${error instanceof Error ? error.message : "Unknown error"}`;
+			summaryResultsDiv.className = "summary-results error";
+		} finally {
+			summarizeTextBtn.disabled = false;
+		}
+	});
+
+	visualizeTextBtn.addEventListener("click", async () => {
+		if (summaries.length === 0) {
+			alert("No summaries to visualize");
+			return;
+		}
+
+		iframeContainer.innerHTML = "<p>Generating visualization...</p>";
+		iframeContainer.style.display = "block";
+		visualizeTextBtn.disabled = true;
+
+		try {
+			const response = await fetch("/api/generate-visualization", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ summaries }),
+			});
+
+			const data = await response.json();
+
+			if (!response.ok) {
+				throw new Error(data.error || "Failed to generate visualization");
+			}
+
+			iframeContainer.innerHTML = "";
+
+			const iframe = document.createElement("iframe");
+			iframe.style.width = "100%";
+			iframe.style.minHeight = "600px";
+			iframe.style.border = "none";
+			iframe.srcdoc = data.html;
+
+			iframeContainer.appendChild(iframe);
+
+			iframe.scrollIntoView({ behavior: "smooth", block: "start" });
+		} catch (error) {
+			iframeContainer.innerHTML = `<p style="color: #d32f2f;">Error: ${error instanceof Error ? error.message : "Unknown error"}</p>`;
+		} finally {
+			visualizeTextBtn.disabled = false;
+		}
+	});
+</script>

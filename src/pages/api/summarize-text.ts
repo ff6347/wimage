@@ -1,0 +1,118 @@
+// ABOUTME: API route for summarizing Wikipedia text using OpenAI
+// ABOUTME: Accepts Wikipedia article text and extracts key facts into two short sentences
+
+import type { APIRoute } from "astro";
+import OpenAI from "openai";
+
+interface SummaryRequest {
+	title: string;
+	text: string;
+}
+
+interface SummaryResult {
+	title: string;
+	summary: string;
+	error?: string;
+}
+
+export const POST: APIRoute = async ({ request }) => {
+	try {
+		const openaiKey = import.meta.env.OPENAI_API_KEY;
+
+		if (!openaiKey) {
+			return new Response(
+				JSON.stringify({ error: "OPENAI_API_KEY not configured" }),
+				{ status: 500, headers: { "Content-Type": "application/json" } },
+			);
+		}
+
+		const body = await request.json();
+		const articles = body.articles;
+
+		if (!Array.isArray(articles) || articles.length === 0) {
+			return new Response(
+				JSON.stringify({ error: "No valid articles provided" }),
+				{ status: 400, headers: { "Content-Type": "application/json" } },
+			);
+		}
+
+		const openai = new OpenAI({ apiKey: openaiKey });
+
+		const results: SummaryResult[] = await Promise.all(
+			articles.map(async (article: SummaryRequest) => {
+				if (!article.text || !article.title) {
+					return {
+						title: article.title || "Unknown",
+						summary: "",
+						error: "Missing text or title",
+					};
+				}
+
+				try {
+					const completion = await openai.chat.completions.create({
+						model: "gpt-5",
+						messages: [
+							{
+								role: "system",
+								content:
+									"You are a helpful assistant that extracts key facts from Wikipedia articles. Summarize 5 most important sections of each of the articles into exactly one short, clear sentences that capture the most important information. Be concise and informative.",
+							},
+							{
+								role: "user",
+								content: `Article title: ${article.title}\n\nArticle text:\n${article.text}`,
+							},
+						],
+						// max_completion_tokens: 1000,
+					});
+
+					console.log(
+						`Completion response for "${article.title}":`,
+						JSON.stringify(completion, null, 2),
+					);
+
+					const summary =
+						completion.choices[0]?.message?.content || "No summary generated";
+
+					if (!summary || summary === "No summary generated") {
+						console.error(
+							`Empty summary for "${article.title}". Full response:`,
+							completion,
+						);
+					}
+
+					return {
+						title: article.title,
+						summary: summary.trim(),
+					};
+				} catch (error) {
+					console.error(`Error summarizing "${article.title}":`, error);
+					return {
+						title: article.title,
+						summary: "",
+						error: error instanceof Error ? error.message : "Unknown error",
+					};
+				}
+			}),
+		);
+
+		return new Response(
+			JSON.stringify({
+				success: true,
+				results,
+			}),
+			{
+				status: 200,
+				headers: { "Content-Type": "application/json" },
+			},
+		);
+	} catch (error) {
+		console.error("Error summarizing text:", error);
+		return new Response(
+			JSON.stringify({
+				error: "Failed to summarize text",
+				details: error instanceof Error ? error.message : "Unknown error",
+			}),
+			{ status: 500, headers: { "Content-Type": "application/json" } },
+		);
+	}
+};

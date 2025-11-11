@@ -9,6 +9,8 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^5.15.5"
+    "astro": "^5.15.5",
+    "moondream": "0.1.1",
+    "openai": "6.8.1"
   }
 }
