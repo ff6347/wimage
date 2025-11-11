@@ -63,7 +63,32 @@ export const POST: APIRoute = async ({ request }) => {
 				}
 
 				try {
-					const response = await fetch(apiUrl);
+					const response = await fetch(apiUrl, {
+						headers: {
+							"User-Agent": "WikiImageApp/1.0 (https://wimage.pages.dev; educational project)",
+							"Accept": "application/json",
+						},
+					});
+
+					if (!response.ok) {
+						const text = await response.text();
+						console.error(`Wikipedia API error for "${url}": ${response.status} ${text.substring(0, 200)}`);
+						return {
+							url,
+							error: `Wikipedia API error: ${response.status}`,
+						};
+					}
+
+					const contentType = response.headers.get("content-type");
+					if (!contentType || !contentType.includes("application/json")) {
+						const text = await response.text();
+						console.error(`Non-JSON response for "${url}": ${text.substring(0, 200)}`);
+						return {
+							url,
+							error: "Wikipedia API returned non-JSON response",
+						};
+					}
+
 					const data = await response.json();
 
 					const page: WikipediaPage = Object.values(data?.query?.pages || {})[0] as WikipediaPage;
