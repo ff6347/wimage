@@ -28,6 +28,7 @@ button {
 	color: white;
 	border: none;
 	transition: background-color 0.2s;
+	min-width: 200px;
 }
 
 button:disabled {
@@ -46,8 +47,4 @@ button:hover:not(:disabled) {
 .error {
 	color: #d32f2f;
 	font-weight: bold;
-}
-
-.success {
-	color: #388e3c;
 }

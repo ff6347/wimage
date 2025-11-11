@@ -77,10 +77,27 @@
 		margin-top: 16px;
 	}
 
+	.button-container button {
+		min-width: 200px;
+	}
+
 	section {
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
+		animation: expandIn 0.3s ease-out;
+	}
+
+	@keyframes expandIn {
+		from {
+			opacity: 0;
+			max-height: 0;
+			overflow: hidden;
+		}
+		to {
+			opacity: 1;
+			max-height: 2000px;
+		}
 	}
 
 	.query img {
@@ -90,16 +107,8 @@
 
 	.result-container {
 		padding: 20px;
-		background-color: #f5f5f5;
+		background-color: lightgray;
 		min-height: 50px;
-	}
-
-	.extract .result-container {
-		background-color: #e8f5e9;
-	}
-
-	.wikipedia .result-container {
-		background-color: #e3f2fd;
 	}
 
 	.wikipedia .result-container a {
@@ -109,10 +118,6 @@
 
 	.wikipedia .result-container a:hover {
 		text-decoration: underline;
-	}
-
-	.fetch-text .result-container {
-		background-color: #fff3e0;
 	}
 
 	.fetch-text .result-container details {
@@ -137,10 +142,6 @@
 		margin-top: 8px;
 		font-size: 14px;
 		line-height: 1.4;
-	}
-
-	.summarize .result-container {
-		background-color: #f3e5f5;
 	}
 
 	.summarize .summary-item {
@@ -231,7 +232,7 @@
 		section.classList.remove("hidden");
 	}
 
-	function setStatus(element: HTMLElement, message: string, type: "error" | "success" | "info" = "info") {
+	function setStatus(element: HTMLElement, message: string, type: "error" | "info" = "info") {
 		element.textContent = message;
 		element.className = `result-container ${type}`;
 	}
@@ -262,7 +263,7 @@
 				capturedBlob = blob;
 				capturedImage.src = URL.createObjectURL(blob);
 				showSection(querySection);
-				setStatus(resultsDiv, "Image captured! Click Analyze.", "success");
+				setStatus(resultsDiv, "Image captured! Click Analyze.");
 			}
 		}, "image/jpeg");
 	});
@@ -294,7 +295,6 @@
 			moondreamResult = typeof data.result === "string" ? data.result : JSON.stringify(data.result);
 
 			resultsDiv.innerHTML = `<h3>Results:</h3><pre>${JSON.stringify(data.result, null, 2)}</pre>`;
-			resultsDiv.classList.add("success");
 			showSection(extractSection);
 		} catch (error) {
 			setStatus(resultsDiv, `Error: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
@@ -328,7 +328,6 @@
 			extractedData = data.data;
 
 			extractedResultsDiv.innerHTML = `<h3>Extracted JSON:</h3><pre>${JSON.stringify(data.data, null, 2)}</pre>`;
-			extractedResultsDiv.classList.add("success");
 			showSection(wikipediaSection);
 		} catch (error) {
 			setStatus(extractedResultsDiv, `Error: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
@@ -390,7 +389,6 @@
 			resultsHtml += "</ul>";
 
 			wikipediaResultsDiv.innerHTML = resultsHtml;
-			wikipediaResultsDiv.classList.add("success");
 
 			if (wikipediaUrls.length > 0) {
 				showSection(fetchTextSection);
@@ -447,7 +445,6 @@
 			}
 
 			wikiTextResultsDiv.innerHTML = resultsHtml;
-			wikiTextResultsDiv.classList.add("success");
 
 			if (wikiArticles.length > 0) {
 				showSection(summarizeSection);
@@ -506,7 +503,6 @@
 			}
 
 			summaryResultsDiv.innerHTML = resultsHtml;
-			summaryResultsDiv.classList.add("success");
 
 			if (summaries.length > 0) {
 				showSection(visualizeSection);
