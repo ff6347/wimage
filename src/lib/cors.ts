@@ -1,8 +1,9 @@
 // ABOUTME: CORS validation and rate limiting helper for API endpoints
 // ABOUTME: Validates that requests come from the same origin and enforces rate limits
 
-const rateLimitMap = new Map<string, number>();
+const rateLimitMap = new Map<string, number[]>();
 const RATE_LIMIT_WINDOW = 60000; // 1 minute in milliseconds
+const MAX_REQUESTS_PER_WINDOW = 10; // 10 requests per minute
 
 export function validateOrigin(request: Request): boolean {
 	const origin = request.headers.get("origin");
@@ -37,20 +38,31 @@ export function validateOrigin(request: Request): boolean {
 
 export function checkRateLimit(clientId: string): boolean {
 	const now = Date.now();
-	const lastRequest = rateLimitMap.get(clientId);
+	const cutoff = now - RATE_LIMIT_WINDOW;
 
-	if (lastRequest && now - lastRequest < RATE_LIMIT_WINDOW) {
+	// Get existing requests for this client
+	let requests = rateLimitMap.get(clientId) || [];
+
+	// Remove requests older than the window
+	requests = requests.filter(timestamp => timestamp > cutoff);
+
+	// Check if limit exceeded
+	if (requests.length >= MAX_REQUESTS_PER_WINDOW) {
 		return false;
 	}
 
-	rateLimitMap.set(clientId, now);
+	// Add current request
+	requests.push(now);
+	rateLimitMap.set(clientId, requests);
 
-	// Clean up old entries every 100 requests
+	// Clean up old entries every 100 clients
 	if (rateLimitMap.size > 100) {
-		const cutoff = now - RATE_LIMIT_WINDOW;
-		for (const [id, timestamp] of rateLimitMap.entries()) {
-			if (timestamp < cutoff) {
+		for (const [id, timestamps] of rateLimitMap.entries()) {
+			const recentRequests = timestamps.filter(t => t > cutoff);
+			if (recentRequests.length === 0) {
 				rateLimitMap.delete(id);
+			} else {
+				rateLimitMap.set(id, recentRequests);
 			}
 		}
 	}
@@ -77,7 +89,7 @@ export function createCorsErrorResponse(): Response {
 
 export function createRateLimitErrorResponse(): Response {
 	return new Response(
-		JSON.stringify({ error: "Rate limit exceeded. Please wait 1 minute between requests." }),
+		JSON.stringify({ error: "Rate limit exceeded. Maximum 10 requests per minute allowed." }),
 		{
 			status: 429,
 			headers: {
