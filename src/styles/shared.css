@@ -1,0 +1,53 @@
+/* ABOUTME: Shared styles for camera capture and demo pages */
+/* ABOUTME: Common button, layout, and result container styles */
+
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+body {
+	font-family: Avenir, Montserrat, Corbel, "URW Gothic", source-sans-pro,
+		sans-serif;
+	font-weight: normal;
+	background: #f5f5f5;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	padding: 20px;
+	min-height: 100vh;
+}
+
+button {
+	padding: 10px 20px;
+	font-size: 16px;
+	cursor: pointer;
+	background-color: #0066cc;
+	color: white;
+	border: none;
+	transition: background-color 0.2s;
+}
+
+button:disabled {
+	background-color: #ccc;
+	cursor: not-allowed;
+}
+
+button:hover:not(:disabled) {
+	background-color: #0052a3;
+}
+
+.hidden {
+	display: none !important;
+}
+
+.error {
+	color: #d32f2f;
+	font-weight: bold;
+}
+
+.success {
+	color: #388e3c;
+}

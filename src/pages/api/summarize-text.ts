@@ -3,7 +3,13 @@
 
 import type { APIRoute } from "astro";
 import OpenAI from "openai";
-import { validateOrigin, createCorsErrorResponse, checkRateLimit, getClientId, createRateLimitErrorResponse } from "../../lib/cors";
+import {
+	validateOrigin,
+	createCorsErrorResponse,
+	checkRateLimit,
+	getClientId,
+	createRateLimitErrorResponse,
+} from "../../lib/cors";
 
 interface SummaryRequest {
 	title: string;
@@ -28,7 +34,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
 	try {
 		const runtime = locals.runtime as { env?: { OPENAI_API_KEY?: string } };
-		const openaiKey = runtime?.env?.OPENAI_API_KEY || import.meta.env.OPENAI_API_KEY;
+		const openaiKey =
+			runtime?.env?.OPENAI_API_KEY || import.meta.env.OPENAI_API_KEY;
 
 		if (!openaiKey) {
 			return new Response(
@@ -66,7 +73,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 							{
 								role: "system",
 								content:
-									"You are a helpful assistant that extracts key facts from Wikipedia articles. Summarize 5 most important sections of each of the articles into exactly one short, clear sentences that capture the most important information. Be concise and informative.",
+									"You are a helpful assistant that extracts key facts from Wikipedia articles. Summarize 5 most important sections of each of the articles into exactly one short, clear sentences that capture the most important information. Be concise and informative. Then create a new Wikipedia article based on the content. Keep it short as the goal is to provide a quick overview. Return ONLY the summary text without any additional commentary.",
 							},
 							{
 								role: "user",

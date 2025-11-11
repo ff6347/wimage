@@ -1,50 +1,57 @@
-<!-- ABOUTME: Camera capture component that accesses webcam and sends images to Moondream API --><!-- ABOUTME: Handles video stream, image capture, and query submission -->
+<!-- ABOUTME: Camera capture component that accesses webcam and sends images to Moondream API -->
+<!-- ABOUTME: Handles video stream, image capture, and query submission -->
+
 <div class="camera-container">
 	<video id="video" autoplay playsinline></video>
-	<canvas id="canvas" style="display: none;"></canvas>
+	<canvas id="canvas" class="hidden"></canvas>
 
-	<div class="controls">
+	<div class="button-container">
 		<button id="startCamera">Start Camera</button>
 		<button id="capture" disabled>Capture Image</button>
 	</div>
 
-	<div class="query-section" style="display: none;">
+	<section class="query hidden">
 		<img id="capturedImage" alt="Captured image" />
-		<!-- <input
-      type="text"
-      id="query"
-      placeholder="What do you want to know about this image?"
-      value="What do you see?"
-    /> -->
-		<button id="analyze">Analyze</button>
-	</div>
+		<div class="button-container">
+			<button id="analyze">Analyze</button>
+		</div>
+		<div class="result-container" id="results"></div>
+	</section>
 
-	<div class="results" id="results"></div>
+	<section class="extract hidden">
+		<div class="button-container">
+			<button id="extractJson">Extract JSON</button>
+		</div>
+		<div class="result-container" id="extractedResults"></div>
+	</section>
 
-	<div class="extract-section" style="display: none;">
-		<button id="extractJson">Extract JSON</button>
-		<div class="extracted-results" id="extractedResults"></div>
-	</div>
+	<section class="wikipedia hidden">
+		<div class="button-container">
+			<button id="checkWikipedia">Check Wikipedia</button>
+		</div>
+		<div class="result-container" id="wikipediaResults"></div>
+	</section>
 
-	<div class="wikipedia-section" style="display: none;">
-		<button id="checkWikipedia">Check Wikipedia</button>
-		<div class="wikipedia-results" id="wikipediaResults"></div>
-	</div>
+	<section class="fetch-text hidden">
+		<div class="button-container">
+			<button id="fetchWikiText">Fetch Wikipedia Text</button>
+		</div>
+		<div class="result-container" id="wikiTextResults"></div>
+	</section>
 
-	<div class="fetch-text-section" style="display: none;">
-		<button id="fetchWikiText">Fetch Wikipedia Text</button>
-		<div class="wiki-text-results" id="wikiTextResults"></div>
-	</div>
+	<section class="summarize hidden">
+		<div class="button-container">
+			<button id="summarizeText">Summarize Articles</button>
+		</div>
+		<div class="result-container" id="summaryResults"></div>
+	</section>
 
-	<div class="summarize-section" style="display: none;">
-		<button id="summarizeText">Summarize Articles</button>
-		<div class="summary-results" id="summaryResults"></div>
-	</div>
-
-	<div class="visualize-section" style="display: none;">
-		<button id="visualizeText">Visualize Summaries</button>
+	<section class="visualize hidden">
+		<div class="button-container">
+			<button id="visualizeText">Visualize Summaries</button>
+		</div>
 		<div id="iframeContainer"></div>
-	</div>
+	</section>
 </div>
 
 <style>
@@ -63,112 +70,68 @@
 		background: lightgray;
 	}
 
-	.controls {
+	.button-container {
 		display: flex;
 		gap: 8px;
 		justify-content: center;
+		margin-top: 16px;
 	}
 
-	button {
-		padding: 10px 20px;
-		font-size: 16px;
-		cursor: pointer;
-		background-color: #0066cc;
-		color: white;
-		border: none;
-		transition: background-color 0.2s;
-	}
-
-	button:disabled {
-		background-color: #ccc;
-		cursor: not-allowed;
-	}
-
-	button:hover:not(:disabled) {
-		background-color: #0052a3;
-	}
-
-	.query-section {
+	section {
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
 	}
 
-	.query-section img {
+	.query img {
 		width: 100%;
 		height: auto;
 	}
 
-	input[type="text"] {
-		width: 100%;
-		padding: 10px;
-		font-size: 16px;
-		border: 1px solid #ccc;
-	}
-
-	.results {
+	.result-container {
 		padding: 20px;
 		background-color: #f5f5f5;
 		min-height: 50px;
 	}
 
-	.extract-section,
-	.wikipedia-section,
-	.fetch-text-section,
-	.summarize-section,
-	.visualize-section {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-	}
-
-	.extracted-results {
-		padding: 20px;
+	.extract .result-container {
 		background-color: #e8f5e9;
-		min-height: 50px;
 	}
 
-	.wikipedia-results {
-		padding: 20px;
+	.wikipedia .result-container {
 		background-color: #e3f2fd;
-		min-height: 50px;
 	}
 
-	.wikipedia-results a {
+	.wikipedia .result-container a {
 		color: #1976d2;
 		text-decoration: none;
 	}
 
-	.wikipedia-results a:hover {
+	.wikipedia .result-container a:hover {
 		text-decoration: underline;
 	}
 
-	.wiki-text-results {
-		padding: 20px;
+	.fetch-text .result-container {
 		background-color: #fff3e0;
-		min-height: 50px;
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
 	}
 
-	.wiki-text-results details {
+	.fetch-text .result-container details {
 		padding: 10px;
 		background-color: white;
 		border: 1px solid #ddd;
 	}
 
-	.wiki-text-results summary {
+	.fetch-text .result-container summary {
 		cursor: pointer;
 		font-weight: bold;
 		padding: 5px;
 	}
 
-	.wiki-text-results summary:hover {
+	.fetch-text .result-container summary:hover {
 		background-color: #f5f5f5;
 	}
 
-	.wiki-text-results pre {
+	.fetch-text .result-container pre {
 		white-space: pre-wrap;
 		word-wrap: break-word;
 		margin-top: 8px;
@@ -176,34 +139,30 @@
 		line-height: 1.4;
 	}
 
-	.summary-results {
-		padding: 20px;
+	.summarize .result-container {
 		background-color: #f3e5f5;
-		min-height: 50px;
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
 	}
 
-	.summary-results .summary-item {
+	.summarize .summary-item {
 		padding: 15px;
 		background-color: white;
 		border-left: 4px solid #9c27b0;
+		margin-bottom: 8px;
 	}
 
-	.summary-results .summary-item h4 {
+	.summarize .summary-item:last-child {
+		margin-bottom: 0;
+	}
+
+	.summarize .summary-item h4 {
 		margin: 0 0 8px 0;
 		color: #7b1fa2;
 	}
 
-	.summary-results .summary-item p {
+	.summarize .summary-item p {
 		margin: 0;
 		line-height: 1.6;
 		color: #333;
-	}
-
-	#iframeContainer {
-		display: none;
 	}
 
 	#iframeContainer iframe {
@@ -211,15 +170,6 @@
 		min-height: 600px;
 		border: 4px solid #667eea;
 		box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-	}
-
-	.error {
-		color: #d32f2f;
-		font-weight: bold;
-	}
-
-	.success {
-		color: #388e3c;
 	}
 </style>
 
@@ -244,9 +194,7 @@
 
 	const video = document.getElementById("video") as HTMLVideoElement;
 	const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-	const startCameraBtn = document.getElementById(
-		"startCamera",
-	) as HTMLButtonElement;
+	const startCameraBtn = document.getElementById("startCamera") as HTMLButtonElement;
 	const captureBtn = document.getElementById("capture") as HTMLButtonElement;
 	const analyzeBtn = document.getElementById("analyze") as HTMLButtonElement;
 	const extractJsonBtn = document.getElementById("extractJson") as HTMLButtonElement;
@@ -254,34 +202,39 @@
 	const fetchWikiTextBtn = document.getElementById("fetchWikiText") as HTMLButtonElement;
 	const summarizeTextBtn = document.getElementById("summarizeText") as HTMLButtonElement;
 	const visualizeTextBtn = document.getElementById("visualizeText") as HTMLButtonElement;
-	// const queryInput = document.getElementById("query") as HTMLInputElement;
-	const capturedImage = document.getElementById(
-		"capturedImage",
-	) as HTMLImageElement;
-	const querySection = document.querySelector(
-		".query-section",
-	) as HTMLDivElement;
-	const extractSection = document.querySelector(
-		".extract-section",
-	) as HTMLDivElement;
-	const wikipediaSection = document.querySelector(
-		".wikipedia-section",
-	) as HTMLDivElement;
-	const fetchTextSection = document.querySelector(
-		".fetch-text-section",
-	) as HTMLDivElement;
-	const summarizeSection = document.querySelector(
-		".summarize-section",
-	) as HTMLDivElement;
-	const visualizeSection = document.querySelector(
-		".visualize-section",
-	) as HTMLDivElement;
+	const capturedImage = document.getElementById("capturedImage") as HTMLImageElement;
+
+	const querySection = document.querySelector(".query") as HTMLElement;
+	const extractSection = document.querySelector(".extract") as HTMLElement;
+	const wikipediaSection = document.querySelector(".wikipedia") as HTMLElement;
+	const fetchTextSection = document.querySelector(".fetch-text") as HTMLElement;
+	const summarizeSection = document.querySelector(".summarize") as HTMLElement;
+	const visualizeSection = document.querySelector(".visualize") as HTMLElement;
+
 	const resultsDiv = document.getElementById("results") as HTMLDivElement;
 	const extractedResultsDiv = document.getElementById("extractedResults") as HTMLDivElement;
 	const wikipediaResultsDiv = document.getElementById("wikipediaResults") as HTMLDivElement;
 	const wikiTextResultsDiv = document.getElementById("wikiTextResults") as HTMLDivElement;
 	const summaryResultsDiv = document.getElementById("summaryResults") as HTMLDivElement;
 	const iframeContainer = document.getElementById("iframeContainer") as HTMLDivElement;
+
+	// Keyboard shortcut for toggling all sections (Cmd/Ctrl + Shift + D)
+	document.addEventListener("keydown", (e) => {
+		if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "D") {
+			e.preventDefault();
+			const sections = [querySection, extractSection, wikipediaSection, fetchTextSection, summarizeSection, visualizeSection];
+			sections.forEach(section => section.classList.toggle("hidden"));
+		}
+	});
+
+	function showSection(section: HTMLElement) {
+		section.classList.remove("hidden");
+	}
+
+	function setStatus(element: HTMLElement, message: string, type: "error" | "success" | "info" = "info") {
+		element.textContent = message;
+		element.className = `result-container ${type}`;
+	}
 
 	startCameraBtn.addEventListener("click", async () => {
 		try {
@@ -291,11 +244,8 @@
 			video.srcObject = stream;
 			captureBtn.disabled = false;
 			startCameraBtn.disabled = true;
-			resultsDiv.textContent = "Camera started successfully";
-			resultsDiv.className = "results success";
 		} catch (error) {
-			resultsDiv.textContent = `Error accessing camera: ${error instanceof Error ? error.message : "Unknown error"}`;
-			resultsDiv.className = "results error";
+			alert(`Error accessing camera: ${error instanceof Error ? error.message : "Unknown error"}`);
 		}
 	});
 
@@ -311,36 +261,24 @@
 			if (blob) {
 				capturedBlob = blob;
 				capturedImage.src = URL.createObjectURL(blob);
-				querySection.style.display = "block";
-				resultsDiv.textContent =
-					"Image captured! Enter your query and click Analyze.";
-				resultsDiv.className = "results success";
+				showSection(querySection);
+				setStatus(resultsDiv, "Image captured! Click Analyze.", "success");
 			}
 		}, "image/jpeg");
 	});
 
 	analyzeBtn.addEventListener("click", async () => {
 		if (!capturedBlob) {
-			resultsDiv.textContent = "No image captured";
-			resultsDiv.className = "results error";
+			setStatus(resultsDiv, "No image captured", "error");
 			return;
 		}
 
-		// const query = queryInput.value.trim();
-		// if (!query) {
-		// 	resultsDiv.textContent = "Please enter a query";
-		// 	resultsDiv.className = "results error";
-		// 	return;
-		// }
-
-		resultsDiv.textContent = "Analyzing...";
-		resultsDiv.className = "results";
+		setStatus(resultsDiv, "Analyzing...");
 		analyzeBtn.disabled = true;
 
 		try {
 			const formData = new FormData();
 			formData.append("image", capturedBlob, "capture.jpg");
-			// formData.append("query", query);
 
 			const response = await fetch("/api/analyze", {
 				method: "POST",
@@ -353,18 +291,13 @@
 				throw new Error(data.error || "Analysis failed");
 			}
 
-			// Store the result - could be a string or an object with a result property
-			moondreamResult = typeof data.result === 'string' ? data.result : JSON.stringify(data.result);
+			moondreamResult = typeof data.result === "string" ? data.result : JSON.stringify(data.result);
 
-			resultsDiv.innerHTML = `
-        <h3>Results:</h3>
-        <pre>${JSON.stringify(data.result, null, 2)}</pre>
-      `;
-			resultsDiv.className = "results success";
-			extractSection.style.display = "block";
+			resultsDiv.innerHTML = `<h3>Results:</h3><pre>${JSON.stringify(data.result, null, 2)}</pre>`;
+			resultsDiv.classList.add("success");
+			showSection(extractSection);
 		} catch (error) {
-			resultsDiv.textContent = `Error: ${error instanceof Error ? error.message : "Unknown error"}`;
-			resultsDiv.className = "results error";
+			setStatus(resultsDiv, `Error: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
 		} finally {
 			analyzeBtn.disabled = false;
 		}
@@ -372,23 +305,17 @@
 
 	extractJsonBtn.addEventListener("click", async () => {
 		if (!moondreamResult) {
-			extractedResultsDiv.textContent = "No Moondream result to extract";
-			extractedResultsDiv.className = "extracted-results error";
+			setStatus(extractedResultsDiv, "No Moondream result to extract", "error");
 			return;
 		}
 
-		console.log("Sending to extract-json:", moondreamResult);
-
-		extractedResultsDiv.textContent = "Extracting JSON...";
-		extractedResultsDiv.className = "extracted-results";
+		setStatus(extractedResultsDiv, "Extracting JSON...");
 		extractJsonBtn.disabled = true;
 
 		try {
 			const response = await fetch("/api/extract-json", {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
+				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ result: moondreamResult }),
 			});
 
@@ -400,15 +327,11 @@
 
 			extractedData = data.data;
 
-			extractedResultsDiv.innerHTML = `
-        <h3>Extracted JSON:</h3>
-        <pre>${JSON.stringify(data.data, null, 2)}</pre>
-      `;
-			extractedResultsDiv.className = "extracted-results success";
-			wikipediaSection.style.display = "block";
+			extractedResultsDiv.innerHTML = `<h3>Extracted JSON:</h3><pre>${JSON.stringify(data.data, null, 2)}</pre>`;
+			extractedResultsDiv.classList.add("success");
+			showSection(wikipediaSection);
 		} catch (error) {
-			extractedResultsDiv.textContent = `Error: ${error instanceof Error ? error.message : "Unknown error"}`;
-			extractedResultsDiv.className = "extracted-results error";
+			setStatus(extractedResultsDiv, `Error: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
 		} finally {
 			extractJsonBtn.disabled = false;
 		}
@@ -416,14 +339,12 @@
 
 	checkWikipediaBtn.addEventListener("click", async () => {
 		if (!extractedData) {
-			wikipediaResultsDiv.textContent = "No extracted data to check";
-			wikipediaResultsDiv.className = "wikipedia-results error";
+			setStatus(wikipediaResultsDiv, "No extracted data to check", "error");
 			return;
 		}
 
-		// Extract items array from the structured schema
 		let items: string[] = [];
-		if (typeof extractedData === 'object' && extractedData !== null) {
+		if (typeof extractedData === "object" && extractedData !== null) {
 			const dataObj = extractedData as { items?: string[] };
 			if (dataObj.items && Array.isArray(dataObj.items)) {
 				items = dataObj.items;
@@ -431,27 +352,22 @@
 		}
 
 		if (items.length === 0) {
-			wikipediaResultsDiv.textContent = "No items found in extracted data";
-			wikipediaResultsDiv.className = "wikipedia-results error";
+			setStatus(wikipediaResultsDiv, "No items found in extracted data", "error");
 			return;
 		}
 
 		if (items.length !== 3) {
-			wikipediaResultsDiv.textContent = "Expected exactly 3 items from extraction";
-			wikipediaResultsDiv.className = "wikipedia-results error";
+			setStatus(wikipediaResultsDiv, "Expected exactly 3 items from extraction", "error");
 			return;
 		}
 
-		wikipediaResultsDiv.textContent = "Checking Wikipedia...";
-		wikipediaResultsDiv.className = "wikipedia-results";
+		setStatus(wikipediaResultsDiv, "Checking Wikipedia...");
 		checkWikipediaBtn.disabled = true;
 
 		try {
 			const response = await fetch("/api/check-wikipedia", {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
+				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ items }),
 			});
 
@@ -474,14 +390,13 @@
 			resultsHtml += "</ul>";
 
 			wikipediaResultsDiv.innerHTML = resultsHtml;
-			wikipediaResultsDiv.className = "wikipedia-results success";
+			wikipediaResultsDiv.classList.add("success");
 
 			if (wikipediaUrls.length > 0) {
-				fetchTextSection.style.display = "block";
+				showSection(fetchTextSection);
 			}
 		} catch (error) {
-			wikipediaResultsDiv.textContent = `Error: ${error instanceof Error ? error.message : "Unknown error"}`;
-			wikipediaResultsDiv.className = "wikipedia-results error";
+			setStatus(wikipediaResultsDiv, `Error: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
 		} finally {
 			checkWikipediaBtn.disabled = false;
 		}
@@ -489,21 +404,17 @@
 
 	fetchWikiTextBtn.addEventListener("click", async () => {
 		if (wikipediaUrls.length === 0) {
-			wikiTextResultsDiv.textContent = "No Wikipedia URLs to fetch";
-			wikiTextResultsDiv.className = "wiki-text-results error";
+			setStatus(wikiTextResultsDiv, "No Wikipedia URLs to fetch", "error");
 			return;
 		}
 
-		wikiTextResultsDiv.textContent = "Fetching Wikipedia article text...";
-		wikiTextResultsDiv.className = "wiki-text-results";
+		setStatus(wikiTextResultsDiv, "Fetching Wikipedia article text...");
 		fetchWikiTextBtn.disabled = true;
 
 		try {
 			const response = await fetch("/api/fetch-wikipedia-text", {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
+				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ urls: wikipediaUrls }),
 			});
 
@@ -521,7 +432,7 @@
 				} else {
 					wikiArticles.push({
 						title: result.title,
-						text: result.text
+						text: result.text,
 					});
 					resultsHtml += `
 						<details>
@@ -536,14 +447,13 @@
 			}
 
 			wikiTextResultsDiv.innerHTML = resultsHtml;
-			wikiTextResultsDiv.className = "wiki-text-results success";
+			wikiTextResultsDiv.classList.add("success");
 
 			if (wikiArticles.length > 0) {
-				summarizeSection.style.display = "block";
+				showSection(summarizeSection);
 			}
 		} catch (error) {
-			wikiTextResultsDiv.textContent = `Error: ${error instanceof Error ? error.message : "Unknown error"}`;
-			wikiTextResultsDiv.className = "wiki-text-results error";
+			setStatus(wikiTextResultsDiv, `Error: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
 		} finally {
 			fetchWikiTextBtn.disabled = false;
 		}
@@ -551,21 +461,17 @@
 
 	summarizeTextBtn.addEventListener("click", async () => {
 		if (wikiArticles.length === 0) {
-			summaryResultsDiv.textContent = "No articles to summarize";
-			summaryResultsDiv.className = "summary-results error";
+			setStatus(summaryResultsDiv, "No articles to summarize", "error");
 			return;
 		}
 
-		summaryResultsDiv.textContent = "Summarizing articles...";
-		summaryResultsDiv.className = "summary-results";
+		setStatus(summaryResultsDiv, "Summarizing articles...");
 		summarizeTextBtn.disabled = true;
 
 		try {
 			const response = await fetch("/api/summarize-text", {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
+				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ articles: wikiArticles }),
 			});
 
@@ -588,7 +494,7 @@
 				} else {
 					summaries.push({
 						title: result.title,
-						summary: result.summary
+						summary: result.summary,
 					});
 					resultsHtml += `
 						<div class="summary-item">
@@ -600,14 +506,13 @@
 			}
 
 			summaryResultsDiv.innerHTML = resultsHtml;
-			summaryResultsDiv.className = "summary-results success";
+			summaryResultsDiv.classList.add("success");
 
 			if (summaries.length > 0) {
-				visualizeSection.style.display = "block";
+				showSection(visualizeSection);
 			}
 		} catch (error) {
-			summaryResultsDiv.textContent = `Error: ${error instanceof Error ? error.message : "Unknown error"}`;
-			summaryResultsDiv.className = "summary-results error";
+			setStatus(summaryResultsDiv, `Error: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
 		} finally {
 			summarizeTextBtn.disabled = false;
 		}
@@ -620,15 +525,12 @@
 		}
 
 		iframeContainer.innerHTML = "<p>Generating visualization...</p>";
-		iframeContainer.style.display = "block";
 		visualizeTextBtn.disabled = true;
 
 		try {
 			const response = await fetch("/api/generate-visualization", {
 				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
+				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ summaries }),
 			});
 

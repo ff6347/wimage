@@ -3,7 +3,13 @@
 
 import type { APIRoute } from "astro";
 import OpenAI from "openai";
-import { validateOrigin, createCorsErrorResponse, checkRateLimit, getClientId, createRateLimitErrorResponse } from "../../lib/cors";
+import {
+	validateOrigin,
+	createCorsErrorResponse,
+	checkRateLimit,
+	getClientId,
+	createRateLimitErrorResponse,
+} from "../../lib/cors";
 
 interface Summary {
 	title: string;
@@ -22,7 +28,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
 	try {
 		const runtime = locals.runtime as { env?: { OPENAI_API_KEY?: string } };
-		const openaiKey = runtime?.env?.OPENAI_API_KEY || import.meta.env.OPENAI_API_KEY;
+		const openaiKey =
+			runtime?.env?.OPENAI_API_KEY || import.meta.env.OPENAI_API_KEY;
 
 		if (!openaiKey) {
 			return new Response(
@@ -47,26 +54,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			.map((s: Summary) => `Title: ${s.title}\nSummary: ${s.summary}`)
 			.join("\n\n");
 
-		const prompt = `Create a complete, self-contained HTML page with expressive spatial typography to display these article summaries. The design should be unique and creative each time.
-
+		const prompt = `
 Article Summaries:
 ${summariesText}
-
-Requirements:
-1. Create a complete HTML document with DOCTYPE, head, and body
-2. Include all CSS inline in a <style> tag - no external stylesheets
-3. Use creative spatial typography - vary font sizes, positions, rotations, and layouts
-4. Make each title and summary visually distinct with different positioning
-5. Use vibrant colors, gradients, and modern design
-6. Add animations and transitions for visual interest
-7. Make it responsive
-8. Be experimental with layout - don't use standard grids or boring layouts
-9. Use transforms, absolute positioning, flexbox creatively
-10. Include hover effects and interactive elements
-11. Make sure all text is readable despite creative positioning
-12. Use different font weights, letter spacing, and line heights for emphasis
-13. The design should feel like art, not a standard webpage
-
 Return ONLY the complete HTML code, no explanations or markdown formatting.`;
 
 		const completion = await openai.chat.completions.create({
@@ -74,8 +64,26 @@ Return ONLY the complete HTML code, no explanations or markdown formatting.`;
 			messages: [
 				{
 					role: "system",
-					content:
-						"You are an expert in expressive web typography and creative web design. You are specialized in generative typographic art. Use diffenrent fonts like.```css	/* Rounded Sans */ \nfont-family: ui-rounded, 'Hiragino Maru Gothic ProN', Quicksand, Comfortaa,Manjari, 'Arial Rounded MT', 'Arial Rounded MT Bold', Calibri, source-sans-pro, sans-serif;\nfont-weight: normal; ```\n You create unique, artistic HTML pages with experimental spatial layouts. You always return complete, valid HTML documents. Use reduced colors and high contrast. Dont try to just create an article. Think of it more like an expressive spatial image. Black and white with a pop of color is good. No illustration. Use the text to create a mixture of the information instead of just making it look like an article.",
+					content: `You are an expert in expressive web typography and creative web design!
+
+Requirements:
+- Create a complete HTML document with DOCTYPE, head, and body
+- Don't just use the text come up with a new creative content based on the summaries
+-  Include all CSS inline in a <style> tag - no external stylesheets
+-  Use creative spatial typography - vary font sizes, positions, rotations, and layouts
+- You are specialized in generative typographic art.
+- Use diffenrent fonts.
+- Create unique, artistic HTML pages with experimental spatial layouts.
+- No need to use all the text.
+- Simplify and abstract the information to create a visual experience.
+- Try do work on depth.
+
+- Use reduced colors and high contrast. White background and expressive colors.
+- Use the text to create a mixture of the information instead of just making it look like an article.
+- NO ROUNDED CORNERS.
+- VERY IMPORTANT! You always return complete, valid HTML documents.
+- No illustration.
+`,
 				},
 				{
 					role: "user",
