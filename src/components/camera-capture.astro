@@ -12,6 +12,7 @@
 
 	<section class="query hidden">
 		<img id="capturedImage" alt="Captured image" />
+		<div class="api-info hidden" id="analyzeApiInfo"></div>
 		<div class="button-container">
 			<button id="analyze">Analyze</button>
 		</div>
@@ -19,6 +20,7 @@
 	</section>
 
 	<section class="extract hidden">
+		<div class="api-info hidden" id="extractApiInfo"></div>
 		<div class="button-container">
 			<button id="extractJson">Extract JSON</button>
 		</div>
@@ -26,6 +28,7 @@
 	</section>
 
 	<section class="clean hidden">
+		<div class="api-info hidden" id="cleanApiInfo"></div>
 		<div class="button-container">
 			<button id="cleanTerms">Clean Terms</button>
 		</div>
@@ -33,6 +36,7 @@
 	</section>
 
 	<section class="wikipedia hidden">
+		<div class="api-info hidden" id="wikipediaApiInfo"></div>
 		<div class="button-container">
 			<button id="checkWikipedia">Check Wikipedia</button>
 		</div>
@@ -40,6 +44,7 @@
 	</section>
 
 	<section class="fetch-text hidden">
+		<div class="api-info hidden" id="fetchTextApiInfo"></div>
 		<div class="button-container">
 			<button id="fetchWikiText">Fetch Wikipedia Text</button>
 		</div>
@@ -47,6 +52,7 @@
 	</section>
 
 	<section class="summarize hidden">
+		<div class="api-info hidden" id="summarizeApiInfo"></div>
 		<div class="button-container">
 			<button id="summarizeText">Summarize Articles</button>
 		</div>
@@ -54,6 +60,7 @@
 	</section>
 
 	<section class="visualize hidden">
+		<div class="api-info hidden" id="visualizeApiInfo"></div>
 		<div class="button-container">
 			<button id="visualizeText">Visualize Summaries</button>
 		</div>
@@ -179,6 +186,28 @@
 		border: 4px solid #667eea;
 		box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
 	}
+
+	.api-info {
+		padding: 12px;
+		background-color: #e3f2fd;
+		font-size: 14px;
+		margin-bottom: 8px;
+	}
+
+	.api-info strong {
+		color: #0066cc;
+	}
+
+	.api-info .prompt {
+		margin-top: 8px;
+		padding: 8px;
+		background-color: white;
+		font-family: monospace;
+		font-size: 12px;
+		white-space: pre-wrap;
+		word-wrap: break-word;
+		border-left: 3px solid #0066cc;
+	}
 </style>
 
 <script>
@@ -239,8 +268,49 @@
 		}
 	});
 
-	function showSection(section: HTMLElement) {
+	const analyzeApiInfoDiv = document.getElementById("analyzeApiInfo") as HTMLDivElement;
+	const extractApiInfoDiv = document.getElementById("extractApiInfo") as HTMLDivElement;
+	const cleanApiInfoDiv = document.getElementById("cleanApiInfo") as HTMLDivElement;
+	const wikipediaApiInfoDiv = document.getElementById("wikipediaApiInfo") as HTMLDivElement;
+	const fetchTextApiInfoDiv = document.getElementById("fetchTextApiInfo") as HTMLDivElement;
+	const summarizeApiInfoDiv = document.getElementById("summarizeApiInfo") as HTMLDivElement;
+	const visualizeApiInfoDiv = document.getElementById("visualizeApiInfo") as HTMLDivElement;
+
+	async function fetchAndDisplayApiInfo(endpoint: string, infoDiv: HTMLElement) {
+		try {
+			const response = await fetch(endpoint);
+			const info = await response.json();
+
+			let html = `<strong>${info.description}</strong>`;
+
+			if (info.model) {
+				html += `<br><strong>Model:</strong> ${info.model}`;
+			}
+
+			if (info.apiUsed) {
+				html += `<br><strong>API:</strong> ${info.apiUsed}`;
+			}
+
+			if (info.systemPrompt) {
+				html += `<div class="prompt">${info.systemPrompt}</div>`;
+			}
+
+			if (info.query) {
+				html += `<div class="prompt">${info.query}</div>`;
+			}
+
+			infoDiv.innerHTML = html;
+			infoDiv.classList.remove("hidden");
+		} catch (error) {
+			console.error("Error fetching API info:", error);
+		}
+	}
+
+	async function showSection(section: HTMLElement, apiEndpoint?: string, apiInfoDiv?: HTMLElement) {
 		section.classList.remove("hidden");
+		if (apiEndpoint && apiInfoDiv) {
+			await fetchAndDisplayApiInfo(apiEndpoint, apiInfoDiv);
+		}
 	}
 
 	function setStatus(element: HTMLElement, message: string, type: "error" | "info" = "info") {
@@ -269,11 +339,11 @@
 		canvas.height = video.videoHeight;
 		context.drawImage(video, 0, 0);
 
-		canvas.toBlob((blob) => {
+		canvas.toBlob(async (blob) => {
 			if (blob) {
 				capturedBlob = blob;
 				capturedImage.src = URL.createObjectURL(blob);
-				showSection(querySection);
+				await showSection(querySection, "/api/analyze", analyzeApiInfoDiv);
 				setStatus(resultsDiv, "Image captured! Click Analyze.");
 			}
 		}, "image/jpeg");
@@ -306,7 +376,7 @@
 			moondreamResult = typeof data.result === "string" ? data.result : JSON.stringify(data.result);
 
 			resultsDiv.innerHTML = `<h3>Results:</h3><pre>${JSON.stringify(data.result, null, 2)}</pre>`;
-			showSection(extractSection);
+			await showSection(extractSection, "/api/extract-json", extractApiInfoDiv);
 		} catch (error) {
 			setStatus(resultsDiv, `Error: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
 		} finally {
@@ -339,7 +409,7 @@
 			extractedData = data.data;
 
 			extractedResultsDiv.innerHTML = `<h3>Extracted JSON:</h3><pre>${JSON.stringify(data.data, null, 2)}</pre>`;
-			showSection(cleanSection);
+			await showSection(cleanSection, "/api/clean-terms", cleanApiInfoDiv);
 		} catch (error) {
 			setStatus(extractedResultsDiv, `Error: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
 		} finally {
@@ -390,7 +460,7 @@
 				<h3>Cleaned Terms:</h3>
 				<pre>${JSON.stringify(cleanedTerms, null, 2)}</pre>
 			`;
-			showSection(wikipediaSection);
+			await showSection(wikipediaSection, "/api/check-wikipedia", wikipediaApiInfoDiv);
 		} catch (error) {
 			setStatus(cleanedResultsDiv, `Error: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
 		} finally {
@@ -437,7 +507,7 @@
 			wikipediaResultsDiv.innerHTML = resultsHtml;
 
 			if (wikipediaUrls.length > 0) {
-				showSection(fetchTextSection);
+				await showSection(fetchTextSection, "/api/fetch-wikipedia-text", fetchTextApiInfoDiv);
 			}
 		} catch (error) {
 			setStatus(wikipediaResultsDiv, `Error: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
@@ -493,7 +563,7 @@
 			wikiTextResultsDiv.innerHTML = resultsHtml;
 
 			if (wikiArticles.length > 0) {
-				showSection(summarizeSection);
+				await showSection(summarizeSection, "/api/summarize-text", summarizeApiInfoDiv);
 			}
 		} catch (error) {
 			setStatus(wikiTextResultsDiv, `Error: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
@@ -551,7 +621,7 @@
 			summaryResultsDiv.innerHTML = resultsHtml;
 
 			if (summaries.length > 0) {
-				showSection(visualizeSection);
+				await showSection(visualizeSection, "/api/generate-visualization", visualizeApiInfoDiv);
 			}
 		} catch (error) {
 			setStatus(summaryResultsDiv, `Error: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
