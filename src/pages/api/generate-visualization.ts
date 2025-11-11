@@ -10,7 +10,7 @@ interface Summary {
 	summary: string;
 }
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
 	if (!validateOrigin(request)) {
 		return createCorsErrorResponse();
 	}
@@ -21,7 +21,8 @@ export const POST: APIRoute = async ({ request }) => {
 	}
 
 	try {
-		const openaiKey = import.meta.env.OPENAI_API_KEY;
+		const runtime = locals.runtime as { env?: { OPENAI_API_KEY?: string } };
+		const openaiKey = runtime?.env?.OPENAI_API_KEY || import.meta.env.OPENAI_API_KEY;
 
 		if (!openaiKey) {
 			return new Response(

@@ -4,7 +4,7 @@
 import type { APIRoute } from "astro";
 import { validateOrigin, createCorsErrorResponse, checkRateLimit, getClientId, createRateLimitErrorResponse } from "../../lib/cors";
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
 	if (!validateOrigin(request)) {
 		return createCorsErrorResponse();
 	}
@@ -17,7 +17,9 @@ export const POST: APIRoute = async ({ request }) => {
 	try {
 		console.log("Starting image analysis request");
 
-		const apiKey = import.meta.env.MOONDREAM_API_KEY;
+		// Access environment variables from runtime (Cloudflare Workers)
+		const runtime = locals.runtime as { env?: { MOONDREAM_API_KEY?: string } };
+		const apiKey = runtime?.env?.MOONDREAM_API_KEY || import.meta.env.MOONDREAM_API_KEY;
 
 		if (!apiKey) {
 			console.error("MOONDREAM_API_KEY not configured");
