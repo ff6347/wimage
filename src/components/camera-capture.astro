@@ -56,6 +56,7 @@
 			<button id="summarizeText">Summarize Articles</button>
 		</div>
 		<div class="api-info hidden" id="summarizeApiInfo"></div>
+		<div class="summarize-status" id="summarizeStatus"></div>
 		<div class="result-container" id="summaryResults"></div>
 	</section>
 
@@ -212,6 +213,15 @@
 		max-height: none;
 		overflow: visible;
 	}
+
+	.summarize-status {
+		padding: 12px;
+		background-color: #f3e5f5;
+		font-size: 14px;
+		color: #7b1fa2;
+		margin-bottom: 8px;
+		font-weight: 500;
+	}
 </style>
 
 <script>
@@ -261,6 +271,7 @@
 	const wikipediaResultsDiv = document.getElementById("wikipediaResults") as HTMLDivElement;
 	const wikiTextResultsDiv = document.getElementById("wikiTextResults") as HTMLDivElement;
 	const summaryResultsDiv = document.getElementById("summaryResults") as HTMLDivElement;
+	const summarizeStatusDiv = document.getElementById("summarizeStatus") as HTMLDivElement;
 	const iframeContainer = document.getElementById("iframeContainer") as HTMLDivElement;
 
 	// Keyboard shortcut for toggling all sections (Cmd/Ctrl + Shift + D)
@@ -588,7 +599,7 @@
 			return;
 		}
 
-		setStatus(summaryResultsDiv, "Summarizing articles...");
+		summarizeStatusDiv.textContent = "Starting summarization...";
 		summarizeTextBtn.disabled = true;
 
 		try {
@@ -627,11 +638,14 @@
 				}
 			}
 
+			summarizeStatusDiv.textContent = "✓ Summarization complete!";
+
 			if (summaries.length > 0) {
 				await showSection(visualizeSection, "/api/generate-visualization", visualizeApiInfoDiv);
 			}
 		} catch (error) {
-			setStatus(summaryResultsDiv, `Error: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
+			summarizeStatusDiv.textContent = `Error: ${error instanceof Error ? error.message : "Unknown error"}`;
+			summarizeStatusDiv.style.color = "#d32f2f";
 		} finally {
 			summarizeTextBtn.disabled = false;
 		}
@@ -679,10 +693,7 @@
 			const lastWord = words[words.length - 1] || "";
 
 			// Update the status message with current word
-			setStatus(
-				summaryResultsDiv,
-				`Summarizing (${currentIndex}/${totalCount}) ${lastWord}...`,
-			);
+			summarizeStatusDiv.textContent = `Summarizing (${currentIndex}/${totalCount}) ${lastWord}...`;
 		}
 
 		return fullText.trim();
