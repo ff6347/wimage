@@ -816,85 +816,33 @@
 		visualizeTextBtn.disabled = true;
 
 		try {
-			const response = await fetch("/api/generate-visualization-stream", {
+			console.log("Fetching visualization...");
+			const response = await fetch("/api/generate-visualization", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ summaries }),
 			});
 
+			console.log("Response status:", response.status);
+			const data = await response.json();
+
 			if (!response.ok) {
-				const errorText = await response.text();
-				console.error("Visualization stream error:", errorText);
-				throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+				throw new Error(data.error || "Failed to generate visualization");
 			}
 
-			// Create iframe immediately
 			iframeContainer.innerHTML = "";
+
 			const iframe = document.createElement("iframe");
 			iframe.style.width = "100%";
 			iframe.style.minHeight = "600px";
 			iframe.style.border = "none";
+			iframe.srcdoc = data.html;
+
 			iframeContainer.appendChild(iframe);
-
-			// Read the stream and update iframe
-			const reader = response.body.getReader();
-			const decoder = new TextDecoder();
-			let fullHTML = "";
-			let debounceTimeout = null;
-			const debounceDelay = 100; // ms
-			let chunkCount = 0;
-
-			console.log("Starting to read visualization stream...");
-
-			while (true) {
-				const { done, value } = await reader.read();
-
-				if (done) {
-					console.log(`Stream complete. Total chunks: ${chunkCount}, HTML length: ${fullHTML.length}`);
-					// Final update with complete HTML
-					if (debounceTimeout !== null) {
-						clearTimeout(debounceTimeout);
-					}
-
-					// Strip markdown code fences if present
-					let cleanHTML = fullHTML.trim();
-					if (cleanHTML.startsWith("```html")) {
-						cleanHTML = cleanHTML.substring(7);
-					}
-					if (cleanHTML.startsWith("```")) {
-						cleanHTML = cleanHTML.substring(3);
-					}
-					if (cleanHTML.endsWith("```")) {
-						cleanHTML = cleanHTML.substring(0, cleanHTML.length - 3);
-					}
-					cleanHTML = cleanHTML.trim();
-
-					console.log("Final HTML length:", cleanHTML.length);
-					iframe.srcdoc = cleanHTML;
-					break;
-				}
-
-				// Decode and append the chunk
-				const chunk = decoder.decode(value, { stream: true });
-				fullHTML += chunk;
-				chunkCount++;
-
-				if (chunkCount % 10 === 0) {
-					console.log(`Received ${chunkCount} chunks, current HTML length: ${fullHTML.length}`);
-				}
-
-				// Update iframe with debouncing
-				if (debounceTimeout !== null) {
-					clearTimeout(debounceTimeout);
-				}
-				debounceTimeout = window.setTimeout(() => {
-					iframe.srcdoc = fullHTML;
-					debounceTimeout = null;
-				}, debounceDelay);
-			}
 
 			iframe.scrollIntoView({ behavior: "smooth", block: "start" });
 		} catch (error) {
+			console.error("Visualization error:", error);
 			iframeContainer.innerHTML = `<p style="color: #d32f2f;">Error: ${error instanceof Error ? error.message : "Unknown error"}</p>`;
 		} finally {
 			visualizeTextBtn.disabled = false;

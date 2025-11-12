@@ -47,9 +47,10 @@ export const GET: APIRoute = async () => {
 	return new Response(
 		JSON.stringify({
 			endpoint: "/api/generate-visualization-stream",
-			description: "Experimental streaming visualization generation using Vercel AI SDK",
+			description:
+				"Experimental streaming visualization generation using Vercel AI SDK",
 			method: "POST",
-			model: "gpt-4o",
+			model: "gpt-5",
 			systemPrompt: SYSTEM_PROMPT,
 			streaming: true,
 		}),
@@ -58,15 +59,20 @@ export const GET: APIRoute = async () => {
 };
 
 export const POST: APIRoute = async ({ request, locals }) => {
+	console.log("=== POST /api/generate-visualization-stream called ===");
+
 	if (!validateOrigin(request)) {
+		console.log("CORS validation failed");
 		return createCorsErrorResponse();
 	}
 
 	const clientId = getClientId(request);
 	if (!checkRateLimit(clientId)) {
+		console.log("Rate limit exceeded");
 		return createRateLimitErrorResponse();
 	}
 
+	console.log("Validation passed, processing request...");
 	try {
 		const runtime = locals.runtime as { env?: { OPENAI_API_KEY?: string } };
 		const openaiKey =
@@ -83,10 +89,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
 		const summaries = body.summaries as Summary[];
 
 		if (!summaries || summaries.length === 0) {
-			return new Response(
-				JSON.stringify({ error: "Missing summaries" }),
-				{ status: 400, headers: { "Content-Type": "application/json" } },
-			);
+			return new Response(JSON.stringify({ error: "Missing summaries" }), {
+				status: 400,
+				headers: { "Content-Type": "application/json" },
+			});
 		}
 
 		// Format summaries for the prompt
@@ -100,8 +106,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
 		});
 
 		// Create the streaming text response
-		const result = streamText({
-			model: openai("gpt-4o"),
+		console.log("Creating streaming visualization with summaries:", summaries.length);
+		console.log("Formatted summaries:", formattedSummaries.substring(0, 200));
+
+		const result = await streamText({
+			model: openai("gpt-5"),
 			system: SYSTEM_PROMPT,
 			messages: [
 				{
@@ -111,6 +120,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			],
 		});
 
+		console.log("Returning streaming response...");
 		// Return the streaming response
 		return result.toTextStreamResponse();
 	} catch (error) {
