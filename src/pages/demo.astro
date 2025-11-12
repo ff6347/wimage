@@ -101,6 +101,10 @@ import "../styles/shared.css";
 			#loadingMessage {
 				font-size: 18px;
 				color: #333;
+				white-space: pre-wrap;
+				word-wrap: break-word;
+				max-width: 800px;
+				text-align: left;
 			}
 
 			#visualizationContainer {
@@ -438,6 +442,11 @@ import "../styles/shared.css";
 					// Decode the chunk - it's plain text, not JSON
 					const chunk = decoder.decode(value, { stream: true });
 					fullText += chunk;
+
+					// Update the loading message to show streaming text in real-time
+					updateLoadingMessage(
+						`Summarizing: ${article.title}\n\n${fullText}`,
+					);
 				}
 
 				return fullText.trim();
