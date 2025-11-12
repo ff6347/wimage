@@ -108,6 +108,7 @@ import "../styles/shared.css";
 				color: #333;
 				justify-content: center;
 				align-items: center;
+				flex-direction: column;
 			}
 
 			#loadingPrefix {
@@ -417,7 +418,11 @@ import "../styles/shared.css";
 					const article = articles[i];
 
 					try {
-						const summary = await summarizeArticleStreaming(article, i + 1, articles.length);
+						const summary = await summarizeArticleStreaming(
+							article,
+							i + 1,
+							articles.length,
+						);
 						summaries.push({
 							title: article.title,
 							summary: summary,
