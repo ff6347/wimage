@@ -3,8 +3,8 @@
 An experimental web application that captures images from your camera and transforms them into expressive typographic visualizations through a multi-stage AI pipeline.
 
 Created during a generative AI workshop by Ivan Iovine as part of master studies Studio X - Speculative Software at University of Applied Sciences Potsdam (FH-potsdam) by:
-- [Fabian Morón Zirfas](https://github.com/ff6347)
 - [Lele Schlaich](#)
+- [Fabian Morón Zirfas](https://github.com/ff6347)
 
 ## What It Does
 
