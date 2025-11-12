@@ -593,41 +593,37 @@
 
 		try {
 			summaries = [];
-			let resultsHtml = "<h3>Article Summaries:</h3>";
-			summaryResultsDiv.innerHTML = resultsHtml;
+			summaryResultsDiv.innerHTML = "<h3>Article Summaries:</h3>";
 
 			// Process articles one at a time with streaming
 			for (let i = 0; i < wikiArticles.length; i++) {
 				const article = wikiArticles[i];
+
+				// Create a container for this article's summary
+				const summaryItem = document.createElement("div");
+				summaryItem.className = "summary-item";
+				summaryItem.innerHTML = `
+					<h4>${article.title}</h4>
+					<p class="summary-text"></p>
+				`;
+				summaryResultsDiv.appendChild(summaryItem);
+				const summaryText = summaryItem.querySelector(".summary-text") as HTMLParagraphElement;
 
 				try {
 					const summary = await summarizeArticleStreaming(
 						article,
 						i + 1,
 						wikiArticles.length,
+						summaryText,
 					);
 					summaries.push({
 						title: article.title,
 						summary: summary,
 					});
-
-					// Add the summary to the display
-					resultsHtml += `
-						<div class="summary-item">
-							<h4>${article.title}</h4>
-							<p>${summary}</p>
-						</div>
-					`;
-					summaryResultsDiv.innerHTML = resultsHtml;
 				} catch (error) {
 					console.error(`Failed to summarize ${article.title}:`, error);
-					resultsHtml += `
-						<div class="summary-item">
-							<h4>${article.title}</h4>
-							<p style="color: #d32f2f;">Error: ${error instanceof Error ? error.message : "Unknown error"}</p>
-						</div>
-					`;
-					summaryResultsDiv.innerHTML = resultsHtml;
+					summaryText.style.color = "#d32f2f";
+					summaryText.textContent = `Error: ${error instanceof Error ? error.message : "Unknown error"}`;
 				}
 			}
 
@@ -645,6 +641,7 @@
 		article: WikiArticle,
 		currentIndex: number,
 		totalCount: number,
+		summaryElement: HTMLParagraphElement,
 	): Promise<string> {
 		const response = await fetch("/api/summarize-stream", {
 			method: "POST",
@@ -674,7 +671,10 @@
 			const chunk = decoder.decode(value, { stream: true });
 			fullText += chunk;
 
-			// Extract the last word for display
+			// Update the paragraph with the accumulated text
+			summaryElement.textContent = fullText;
+
+			// Extract the last word for display in status
 			const words = fullText.trim().split(/\s+/);
 			const lastWord = words[words.length - 1] || "";
 
