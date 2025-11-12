@@ -10,6 +10,7 @@ import {
 	getClientId,
 	createRateLimitErrorResponse,
 } from "../../lib/cors";
+import { observationsSchema } from "../../lib/json-schema";
 
 interface CleanTermsRequest {
 	items: string[];
@@ -85,7 +86,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 					content: `Clean these terms: ${JSON.stringify(data.items)}`,
 				},
 			],
-			response_format: { type: "json_object" },
+			response_format: observationsSchema,
 		});
 
 		const resultText = completion.choices[0]?.message?.content;
