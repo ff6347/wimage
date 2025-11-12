@@ -1,6 +1,4 @@
-<!-- ABOUTME: Camera capture component that accesses webcam and sends images to Moondream API -->
-<!-- ABOUTME: Handles video stream, image capture, and query submission -->
-
+<!-- ABOUTME: Camera capture component that accesses webcam and sends images to Moondream API --><!-- ABOUTME: Handles video stream, image capture, and query submission -->
 <div class="camera-container">
 	<video id="video" autoplay playsinline></video>
 	<canvas id="canvas" class="hidden"></canvas>
@@ -216,9 +214,9 @@
 
 	.summarize-status {
 		padding: 12px;
-		background-color: #f3e5f5;
+		background-color: lightgray;
 		font-size: 14px;
-		color: #7b1fa2;
+		color: lightslategray;
 		margin-bottom: 8px;
 		font-weight: 500;
 	}
@@ -246,16 +244,32 @@
 
 	const video = document.getElementById("video") as HTMLVideoElement;
 	const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-	const startCameraBtn = document.getElementById("startCamera") as HTMLButtonElement;
+	const startCameraBtn = document.getElementById(
+		"startCamera",
+	) as HTMLButtonElement;
 	const captureBtn = document.getElementById("capture") as HTMLButtonElement;
 	const analyzeBtn = document.getElementById("analyze") as HTMLButtonElement;
-	const extractJsonBtn = document.getElementById("extractJson") as HTMLButtonElement;
-	const cleanTermsBtn = document.getElementById("cleanTerms") as HTMLButtonElement;
-	const checkWikipediaBtn = document.getElementById("checkWikipedia") as HTMLButtonElement;
-	const fetchWikiTextBtn = document.getElementById("fetchWikiText") as HTMLButtonElement;
-	const summarizeTextBtn = document.getElementById("summarizeText") as HTMLButtonElement;
-	const visualizeTextBtn = document.getElementById("visualizeText") as HTMLButtonElement;
-	const capturedImage = document.getElementById("capturedImage") as HTMLImageElement;
+	const extractJsonBtn = document.getElementById(
+		"extractJson",
+	) as HTMLButtonElement;
+	const cleanTermsBtn = document.getElementById(
+		"cleanTerms",
+	) as HTMLButtonElement;
+	const checkWikipediaBtn = document.getElementById(
+		"checkWikipedia",
+	) as HTMLButtonElement;
+	const fetchWikiTextBtn = document.getElementById(
+		"fetchWikiText",
+	) as HTMLButtonElement;
+	const summarizeTextBtn = document.getElementById(
+		"summarizeText",
+	) as HTMLButtonElement;
+	const visualizeTextBtn = document.getElementById(
+		"visualizeText",
+	) as HTMLButtonElement;
+	const capturedImage = document.getElementById(
+		"capturedImage",
+	) as HTMLImageElement;
 
 	const querySection = document.querySelector(".query") as HTMLElement;
 	const extractSection = document.querySelector(".extract") as HTMLElement;
@@ -266,38 +280,77 @@
 	const visualizeSection = document.querySelector(".visualize") as HTMLElement;
 
 	const resultsDiv = document.getElementById("results") as HTMLDivElement;
-	const extractedResultsDiv = document.getElementById("extractedResults") as HTMLDivElement;
-	const cleanedResultsDiv = document.getElementById("cleanedResults") as HTMLDivElement;
-	const wikipediaResultsDiv = document.getElementById("wikipediaResults") as HTMLDivElement;
-	const wikiTextResultsDiv = document.getElementById("wikiTextResults") as HTMLDivElement;
-	const summaryResultsDiv = document.getElementById("summaryResults") as HTMLDivElement;
-	const summarizeStatusDiv = document.getElementById("summarizeStatus") as HTMLDivElement;
-	const iframeContainer = document.getElementById("iframeContainer") as HTMLDivElement;
+	const extractedResultsDiv = document.getElementById(
+		"extractedResults",
+	) as HTMLDivElement;
+	const cleanedResultsDiv = document.getElementById(
+		"cleanedResults",
+	) as HTMLDivElement;
+	const wikipediaResultsDiv = document.getElementById(
+		"wikipediaResults",
+	) as HTMLDivElement;
+	const wikiTextResultsDiv = document.getElementById(
+		"wikiTextResults",
+	) as HTMLDivElement;
+	const summaryResultsDiv = document.getElementById(
+		"summaryResults",
+	) as HTMLDivElement;
+	const summarizeStatusDiv = document.getElementById(
+		"summarizeStatus",
+	) as HTMLDivElement;
+	const iframeContainer = document.getElementById(
+		"iframeContainer",
+	) as HTMLDivElement;
 
 	// Keyboard shortcut for toggling all sections (Cmd/Ctrl + Shift + D)
 	document.addEventListener("keydown", (e) => {
 		if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "D") {
 			e.preventDefault();
-			const sections = [querySection, extractSection, cleanSection, wikipediaSection, fetchTextSection, summarizeSection, visualizeSection];
-			sections.forEach(section => section.classList.toggle("hidden"));
+			const sections = [
+				querySection,
+				extractSection,
+				cleanSection,
+				wikipediaSection,
+				fetchTextSection,
+				summarizeSection,
+				visualizeSection,
+			];
+			sections.forEach((section) => section.classList.toggle("hidden"));
 		}
 	});
 
-	const analyzeApiInfoDiv = document.getElementById("analyzeApiInfo") as HTMLDivElement;
-	const extractApiInfoDiv = document.getElementById("extractApiInfo") as HTMLDivElement;
-	const cleanApiInfoDiv = document.getElementById("cleanApiInfo") as HTMLDivElement;
-	const wikipediaApiInfoDiv = document.getElementById("wikipediaApiInfo") as HTMLDivElement;
-	const fetchTextApiInfoDiv = document.getElementById("fetchTextApiInfo") as HTMLDivElement;
-	const summarizeApiInfoDiv = document.getElementById("summarizeApiInfo") as HTMLDivElement;
-	const visualizeApiInfoDiv = document.getElementById("visualizeApiInfo") as HTMLDivElement;
+	const analyzeApiInfoDiv = document.getElementById(
+		"analyzeApiInfo",
+	) as HTMLDivElement;
+	const extractApiInfoDiv = document.getElementById(
+		"extractApiInfo",
+	) as HTMLDivElement;
+	const cleanApiInfoDiv = document.getElementById(
+		"cleanApiInfo",
+	) as HTMLDivElement;
+	const wikipediaApiInfoDiv = document.getElementById(
+		"wikipediaApiInfo",
+	) as HTMLDivElement;
+	const fetchTextApiInfoDiv = document.getElementById(
+		"fetchTextApiInfo",
+	) as HTMLDivElement;
+	const summarizeApiInfoDiv = document.getElementById(
+		"summarizeApiInfo",
+	) as HTMLDivElement;
+	const visualizeApiInfoDiv = document.getElementById(
+		"visualizeApiInfo",
+	) as HTMLDivElement;
 
 	function escapeHtml(text: string): string {
-		const div = document.createElement('div');
+		const div = document.createElement("div");
 		div.textContent = text;
 		return div.innerHTML;
 	}
 
-	async function fetchAndDisplayApiInfo(endpoint: string, infoDiv: HTMLElement) {
+	async function fetchAndDisplayApiInfo(
+		endpoint: string,
+		infoDiv: HTMLElement,
+	) {
 		try {
 			const response = await fetch(endpoint);
 			const info = await response.json();
@@ -327,14 +380,22 @@
 		}
 	}
 
-	async function showSection(section: HTMLElement, apiEndpoint?: string, apiInfoDiv?: HTMLElement) {
+	async function showSection(
+		section: HTMLElement,
+		apiEndpoint?: string,
+		apiInfoDiv?: HTMLElement,
+	) {
 		section.classList.remove("hidden");
 		if (apiEndpoint && apiInfoDiv) {
 			await fetchAndDisplayApiInfo(apiEndpoint, apiInfoDiv);
 		}
 	}
 
-	function setStatus(element: HTMLElement, message: string, type: "error" | "info" = "info") {
+	function setStatus(
+		element: HTMLElement,
+		message: string,
+		type: "error" | "info" = "info",
+	) {
 		element.textContent = message;
 		element.className = `result-container ${type}`;
 	}
@@ -348,7 +409,9 @@
 			captureBtn.disabled = false;
 			startCameraBtn.disabled = true;
 		} catch (error) {
-			alert(`Error accessing camera: ${error instanceof Error ? error.message : "Unknown error"}`);
+			alert(
+				`Error accessing camera: ${error instanceof Error ? error.message : "Unknown error"}`,
+			);
 		}
 	});
 
@@ -394,12 +457,19 @@
 				throw new Error(data.error || "Analysis failed");
 			}
 
-			moondreamResult = typeof data.result === "string" ? data.result : JSON.stringify(data.result);
+			moondreamResult =
+				typeof data.result === "string"
+					? data.result
+					: JSON.stringify(data.result);
 
 			resultsDiv.innerHTML = `<h3>Results:</h3><pre>${JSON.stringify(data.result, null, 2)}</pre>`;
 			await showSection(extractSection, "/api/extract-json", extractApiInfoDiv);
 		} catch (error) {
-			setStatus(resultsDiv, `Error: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
+			setStatus(
+				resultsDiv,
+				`Error: ${error instanceof Error ? error.message : "Unknown error"}`,
+				"error",
+			);
 		} finally {
 			analyzeBtn.disabled = false;
 		}
@@ -432,7 +502,11 @@
 			extractedResultsDiv.innerHTML = `<h3>Extracted JSON:</h3><pre>${JSON.stringify(data.data, null, 2)}</pre>`;
 			await showSection(cleanSection, "/api/clean-terms", cleanApiInfoDiv);
 		} catch (error) {
-			setStatus(extractedResultsDiv, `Error: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
+			setStatus(
+				extractedResultsDiv,
+				`Error: ${error instanceof Error ? error.message : "Unknown error"}`,
+				"error",
+			);
 		} finally {
 			extractJsonBtn.disabled = false;
 		}
@@ -481,9 +555,17 @@
 				<h3>Cleaned Terms:</h3>
 				<pre>${JSON.stringify(cleanedTerms, null, 2)}</pre>
 			`;
-			await showSection(wikipediaSection, "/api/check-wikipedia", wikipediaApiInfoDiv);
+			await showSection(
+				wikipediaSection,
+				"/api/check-wikipedia",
+				wikipediaApiInfoDiv,
+			);
 		} catch (error) {
-			setStatus(cleanedResultsDiv, `Error: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
+			setStatus(
+				cleanedResultsDiv,
+				`Error: ${error instanceof Error ? error.message : "Unknown error"}`,
+				"error",
+			);
 		} finally {
 			cleanTermsBtn.disabled = false;
 		}
@@ -528,10 +610,18 @@
 			wikipediaResultsDiv.innerHTML = resultsHtml;
 
 			if (wikipediaUrls.length > 0) {
-				await showSection(fetchTextSection, "/api/fetch-wikipedia-text", fetchTextApiInfoDiv);
+				await showSection(
+					fetchTextSection,
+					"/api/fetch-wikipedia-text",
+					fetchTextApiInfoDiv,
+				);
 			}
 		} catch (error) {
-			setStatus(wikipediaResultsDiv, `Error: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
+			setStatus(
+				wikipediaResultsDiv,
+				`Error: ${error instanceof Error ? error.message : "Unknown error"}`,
+				"error",
+			);
 		} finally {
 			checkWikipediaBtn.disabled = false;
 		}
@@ -584,10 +674,18 @@
 			wikiTextResultsDiv.innerHTML = resultsHtml;
 
 			if (wikiArticles.length > 0) {
-				await showSection(summarizeSection, "/api/summarize-stream", summarizeApiInfoDiv);
+				await showSection(
+					summarizeSection,
+					"/api/summarize-stream",
+					summarizeApiInfoDiv,
+				);
 			}
 		} catch (error) {
-			setStatus(wikiTextResultsDiv, `Error: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
+			setStatus(
+				wikiTextResultsDiv,
+				`Error: ${error instanceof Error ? error.message : "Unknown error"}`,
+				"error",
+			);
 		} finally {
 			fetchWikiTextBtn.disabled = false;
 		}
@@ -618,7 +716,9 @@
 					<p class="summary-text"></p>
 				`;
 				summaryResultsDiv.appendChild(summaryItem);
-				const summaryText = summaryItem.querySelector(".summary-text") as HTMLParagraphElement;
+				const summaryText = summaryItem.querySelector(
+					".summary-text",
+				) as HTMLParagraphElement;
 
 				try {
 					const summary = await summarizeArticleStreaming(
@@ -641,7 +741,11 @@
 			summarizeStatusDiv.textContent = "✓ Summarization complete!";
 
 			if (summaries.length > 0) {
-				await showSection(visualizeSection, "/api/generate-visualization", visualizeApiInfoDiv);
+				await showSection(
+					visualizeSection,
+					"/api/generate-visualization",
+					visualizeApiInfoDiv,
+				);
 			}
 		} catch (error) {
 			summarizeStatusDiv.textContent = `Error: ${error instanceof Error ? error.message : "Unknown error"}`;
