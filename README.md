@@ -26,7 +26,7 @@ See the [information flow canvas](./docs/information-flow.canvas) for a visual r
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 22+
 - API keys (see below)
 
 ### Installation
