@@ -792,6 +792,9 @@
 			// Update the paragraph with the accumulated text
 			summaryElement.textContent = fullText;
 
+			// Scroll the summary element into view
+			summaryElement.scrollIntoView({ behavior: "smooth", block: "end" });
+
 			// Extract the last word for display in status
 			const words = fullText.trim().split(/\s+/);
 			const lastWord = words[words.length - 1] || "";
