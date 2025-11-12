@@ -156,22 +156,7 @@
 				</p>
 			</div>
 
-			<textarea id="summaries" placeholder="Enter summaries JSON...">
-[
-  {
-    "title": "Artificial Intelligence",
-    "summary": "AI demonstrates machine intelligence through learning and problem-solving capabilities."
-  },
-  {
-    "title": "Typography",
-    "summary": "Typography is the art of arranging type to make written language legible and appealing."
-  },
-  {
-    "title": "Design",
-    "summary": "Design combines aesthetics and functionality to create meaningful visual experiences."
-  }
-]
-			</textarea>
+			<textarea id="summaries" placeholder="Enter summaries JSON..."></textarea>
 
 			<button id="streamBtn">Start Streaming</button>
 
@@ -203,6 +188,22 @@
 			let updateCount = 0;
 			let debounceTimeout = null;
 			let pendingHTML = "";
+
+			// Set default summaries data
+			summariesInput.value = JSON.stringify([
+				{
+					"title": "Artificial Intelligence",
+					"summary": "AI demonstrates machine intelligence through learning and problem-solving capabilities."
+				},
+				{
+					"title": "Typography",
+					"summary": "Typography is the art of arranging type to make written language legible and appealing."
+				},
+				{
+					"title": "Design",
+					"summary": "Design combines aesthetics and functionality to create meaningful visual experiences."
+				}
+			], null, 2);
 
 			// Update debounce value display
 			debounceDelayInput.addEventListener("input", () => {
