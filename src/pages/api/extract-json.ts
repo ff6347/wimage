@@ -3,15 +3,27 @@
 
 import type { APIRoute } from "astro";
 import OpenAI from "openai";
-import { validateOrigin, createCorsErrorResponse, checkRateLimit, getClientId, createRateLimitErrorResponse } from "../../lib/cors";
+import {
+	validateOrigin,
+	createCorsErrorResponse,
+	checkRateLimit,
+	getClientId,
+	createRateLimitErrorResponse,
+} from "../../lib/cors";
+import { observationsSchema } from "../../lib/json-schema";
 
-const SYSTEM_PROMPT = "Extract exactly three items from the provided text describing what is observed in an image. Return them as an array of three strings.";
+const SYSTEM_PROMPT = `You are a JSON data extract tool. You get some text that should contain a JSON string. For example
+'Results:
+"[\n  "man",\n  "glasses",\n  "hoodie"\n]"'
+
+Return them as an JSON array`;
 
 export const GET: APIRoute = async () => {
 	return new Response(
 		JSON.stringify({
 			endpoint: "/api/extract-json",
-			description: "Extracts structured JSON from Moondream results using OpenAI",
+			description:
+				"Extracts structured JSON from Moondream results using OpenAI",
 			method: "POST",
 			model: "gpt-4o-mini",
 			systemPrompt: SYSTEM_PROMPT,
@@ -32,7 +44,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
 	try {
 		const runtime = locals.runtime as { env?: { OPENAI_API_KEY?: string } };
-		const openaiKey = runtime?.env?.OPENAI_API_KEY || import.meta.env.OPENAI_API_KEY;
+		const openaiKey =
+			runtime?.env?.OPENAI_API_KEY || import.meta.env.OPENAI_API_KEY;
 
 		if (!openaiKey) {
 			return new Response(
@@ -65,29 +78,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 					content: moondreamResult,
 				},
 			],
-			response_format: {
-				type: "json_schema",
-				json_schema: {
-					name: "image_observations",
-					strict: true,
-					schema: {
-						type: "object",
-						properties: {
-							items: {
-								type: "array",
-								items: {
-									type: "string",
-								},
-								minItems: 3,
-								maxItems: 3,
-								description: "Exactly three observations from the image",
-							},
-						},
-						required: ["items"],
-						additionalProperties: false,
-					},
-				},
-			},
+			response_format: observationsSchema,
 		});
 
 		const extractedContent = completion.choices[0]?.message?.content;
