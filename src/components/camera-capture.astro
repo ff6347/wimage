@@ -743,7 +743,7 @@
 			if (summaries.length > 0) {
 				await showSection(
 					visualizeSection,
-					"/api/generate-visualization",
+					"/api/generate-visualization-stream",
 					visualizeApiInfoDiv,
 				);
 			}
@@ -813,27 +813,70 @@
 		visualizeTextBtn.disabled = true;
 
 		try {
-			const response = await fetch("/api/generate-visualization", {
+			const response = await fetch("/api/generate-visualization-stream", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ summaries }),
 			});
 
-			const data = await response.json();
-
 			if (!response.ok) {
-				throw new Error(data.error || "Failed to generate visualization");
+				throw new Error(`HTTP error! status: ${response.status}`);
 			}
 
+			// Create iframe immediately
 			iframeContainer.innerHTML = "";
-
 			const iframe = document.createElement("iframe");
 			iframe.style.width = "100%";
 			iframe.style.minHeight = "600px";
 			iframe.style.border = "none";
-			iframe.srcdoc = data.html;
-
 			iframeContainer.appendChild(iframe);
+
+			// Read the stream and update iframe
+			const reader = response.body.getReader();
+			const decoder = new TextDecoder();
+			let fullHTML = "";
+			let debounceTimeout = null;
+			const debounceDelay = 100; // ms
+
+			while (true) {
+				const { done, value } = await reader.read();
+
+				if (done) {
+					// Final update with complete HTML
+					if (debounceTimeout !== null) {
+						clearTimeout(debounceTimeout);
+					}
+
+					// Strip markdown code fences if present
+					let cleanHTML = fullHTML.trim();
+					if (cleanHTML.startsWith("```html")) {
+						cleanHTML = cleanHTML.substring(7);
+					}
+					if (cleanHTML.startsWith("```")) {
+						cleanHTML = cleanHTML.substring(3);
+					}
+					if (cleanHTML.endsWith("```")) {
+						cleanHTML = cleanHTML.substring(0, cleanHTML.length - 3);
+					}
+					cleanHTML = cleanHTML.trim();
+
+					iframe.srcdoc = cleanHTML;
+					break;
+				}
+
+				// Decode and append the chunk
+				const chunk = decoder.decode(value, { stream: true });
+				fullHTML += chunk;
+
+				// Update iframe with debouncing
+				if (debounceTimeout !== null) {
+					clearTimeout(debounceTimeout);
+				}
+				debounceTimeout = window.setTimeout(() => {
+					iframe.srcdoc = fullHTML;
+					debounceTimeout = null;
+				}, debounceDelay);
+			}
 
 			iframe.scrollIntoView({ behavior: "smooth", block: "start" });
 		} catch (error) {
