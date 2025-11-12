@@ -167,26 +167,9 @@ Artificial intelligence was founded as an academic discipline in 1956, and in th
 							break;
 						}
 
-						// Decode and append the chunk
+						// Decode and append the chunk - it's plain text, not JSON
 						const chunk = decoder.decode(value, { stream: true });
-
-						// Parse the data stream format (lines starting with "0:")
-						const lines = chunk.split("\n");
-						for (const line of lines) {
-							if (line.startsWith("0:")) {
-								// Extract the JSON content
-								const jsonStr = line.substring(2);
-								try {
-									const data = JSON.parse(jsonStr);
-									if (data.type === "text-delta" && data.textDelta) {
-										output.textContent += data.textDelta;
-									}
-								} catch (e) {
-									// Skip lines that aren't valid JSON
-									console.log("Skipping line:", line);
-								}
-							}
-						}
+						output.textContent += chunk;
 					}
 				} catch (error) {
 					console.error("Error:", error);

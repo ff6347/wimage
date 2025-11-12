@@ -435,25 +435,9 @@ import "../styles/shared.css";
 
 					if (done) break;
 
-					// Decode the chunk
+					// Decode the chunk - it's plain text, not JSON
 					const chunk = decoder.decode(value, { stream: true });
-
-					// Parse the Vercel AI SDK data stream format
-					const lines = chunk.split("\n");
-					for (const line of lines) {
-						if (line.startsWith("0:")) {
-							// Extract the JSON content
-							const jsonStr = line.substring(2);
-							try {
-								const data = JSON.parse(jsonStr);
-								if (data.type === "text-delta" && data.textDelta) {
-									fullText += data.textDelta;
-								}
-							} catch (e) {
-								// Skip lines that aren't valid JSON
-							}
-						}
-					}
+					fullText += chunk;
 				}
 
 				return fullText.trim();

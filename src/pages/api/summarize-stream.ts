@@ -3,7 +3,7 @@
 
 import type { APIRoute } from "astro";
 import { streamText } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { createOpenAI } from "@ai-sdk/openai";
 import {
 	validateOrigin,
 	createCorsErrorResponse,
@@ -67,9 +67,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			);
 		}
 
+		// Create OpenAI provider instance with API key
+		const openai = createOpenAI({
+			apiKey: openaiKey,
+		});
+
 		// Create the streaming text response
 		const result = streamText({
-			model: openai("gpt-4o", { apiKey: openaiKey }),
+			model: openai("gpt-4o"),
 			system: SYSTEM_PROMPT,
 			messages: [
 				{
@@ -80,7 +85,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 		});
 
 		// Return the streaming response
-		return result.toDataStreamResponse();
+		return result.toTextStreamResponse();
 	} catch (error) {
 		console.error("Error streaming summary:", error);
 		return new Response(
