@@ -16,7 +16,8 @@
       "Bash(open http://localhost:4321/test-stream)",
       "WebFetch(domain:ai-sdk.dev)",
       "Bash(node -e:*)",
-      "Bash(open http://localhost:4321/demo)"
+      "Bash(open http://localhost:4321/demo)",
+      "Bash(open:*)"
     ],
     "deny": [],
     "ask": []

@@ -40,6 +40,7 @@ Requirements:
 - NO ROUNDED CORNERS.
 - VERY IMPORTANT! You always return complete, valid HTML documents.
 - No illustration.
+- CRITICAL: Return ONLY the raw HTML, no markdown code fences, no \`\`\`html wrapper, just the HTML starting with <!DOCTYPE html>
 `;
 
 export const GET: APIRoute = async () => {

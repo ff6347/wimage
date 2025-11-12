@@ -282,7 +282,21 @@
 							if (debounceTimeout !== null) {
 								clearTimeout(debounceTimeout);
 							}
-							updateIframe(fullHTML);
+
+							// Strip markdown code fences if present
+							let cleanHTML = fullHTML.trim();
+							if (cleanHTML.startsWith("```html")) {
+								cleanHTML = cleanHTML.substring(7);
+							}
+							if (cleanHTML.startsWith("```")) {
+								cleanHTML = cleanHTML.substring(3);
+							}
+							if (cleanHTML.endsWith("```")) {
+								cleanHTML = cleanHTML.substring(0, cleanHTML.length - 3);
+							}
+							cleanHTML = cleanHTML.trim();
+
+							updateIframe(cleanHTML);
 
 							statusDiv.className = "status complete";
 							statusDiv.textContent = "✓ Streaming complete!";
