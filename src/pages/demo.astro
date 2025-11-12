@@ -24,7 +24,10 @@ import "../styles/shared.css";
 
 			<div class="loading-section hidden" id="loadingSection">
 				<div class="loading-spinner"></div>
-				<p id="loadingMessage">Processing...</p>
+				<div id="loadingMessage">
+					<span id="loadingPrefix">Processing</span>
+					<span id="loadingWord">...</span>
+				</div>
 			</div>
 		</div>
 
@@ -99,8 +102,22 @@ import "../styles/shared.css";
 			}
 
 			#loadingMessage {
+				display: flex;
+				gap: 0.5rem;
+				width: 100%;
 				font-size: 18px;
 				color: #333;
+				justify-content: center;
+				align-items: center;
+			}
+
+			#loadingPrefix {
+				flex-shrink: 0;
+			}
+
+			#loadingWord {
+				min-width: 150px;
+				text-align: left;
 			}
 
 			#visualizationContainer {
@@ -148,15 +165,25 @@ import "../styles/shared.css";
 			const loadingSection = document.getElementById(
 				"loadingSection",
 			) as HTMLDivElement;
-			const loadingMessage = document.getElementById(
-				"loadingMessage",
-			) as HTMLParagraphElement;
+			const loadingPrefix = document.getElementById(
+				"loadingPrefix",
+			) as HTMLSpanElement;
+			const loadingWord = document.getElementById(
+				"loadingWord",
+			) as HTMLSpanElement;
 			const visualizationContainer = document.getElementById(
 				"visualizationContainer",
 			) as HTMLDivElement;
 
 			function updateLoadingMessage(message: string) {
-				loadingMessage.textContent = message;
+				// For backwards compatibility with non-streaming messages
+				loadingPrefix.textContent = message;
+				loadingWord.textContent = "";
+			}
+
+			function updateLoadingMessageParts(prefix: string, word: string) {
+				loadingPrefix.textContent = prefix;
+				loadingWord.textContent = word;
 			}
 
 			function showLoading() {
@@ -438,13 +465,14 @@ import "../styles/shared.css";
 					const chunk = decoder.decode(value, { stream: true });
 					fullText += chunk;
 
-					// Extract the last few words for display (show last 3-5 words)
+					// Extract the last word for display
 					const words = fullText.trim().split(/\s+/);
 					const lastWord = words[words.length - 1] || "";
 
-					// Update the loading message to show only the current word
-					updateLoadingMessage(
-						`Summarizing (${currentIndex}/${totalCount}) ${lastWord}...`,
+					// Update the loading message using separate parts to prevent layout jump
+					updateLoadingMessageParts(
+						`Summarizing (${currentIndex}/${totalCount})`,
+						`${lastWord}...`,
 					);
 				}
 
