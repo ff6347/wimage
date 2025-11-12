@@ -573,7 +573,7 @@
 			wikiTextResultsDiv.innerHTML = resultsHtml;
 
 			if (wikiArticles.length > 0) {
-				await showSection(summarizeSection, "/api/summarize-text", summarizeApiInfoDiv);
+				await showSection(summarizeSection, "/api/summarize-stream", summarizeApiInfoDiv);
 			}
 		} catch (error) {
 			setStatus(wikiTextResultsDiv, `Error: ${error instanceof Error ? error.message : "Unknown error"}`, "error");
@@ -592,43 +592,44 @@
 		summarizeTextBtn.disabled = true;
 
 		try {
-			const response = await fetch("/api/summarize-text", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ articles: wikiArticles }),
-			});
-
-			const data = await response.json();
-
-			if (!response.ok) {
-				throw new Error(data.error || "Failed to summarize articles");
-			}
-
 			summaries = [];
 			let resultsHtml = "<h3>Article Summaries:</h3>";
-			for (const result of data.results) {
-				if (result.error) {
-					resultsHtml += `
-						<div class="summary-item">
-							<h4>${result.title}</h4>
-							<p style="color: #d32f2f;">${result.error}</p>
-						</div>
-					`;
-				} else {
+			summaryResultsDiv.innerHTML = resultsHtml;
+
+			// Process articles one at a time with streaming
+			for (let i = 0; i < wikiArticles.length; i++) {
+				const article = wikiArticles[i];
+
+				try {
+					const summary = await summarizeArticleStreaming(
+						article,
+						i + 1,
+						wikiArticles.length,
+					);
 					summaries.push({
-						title: result.title,
-						summary: result.summary,
+						title: article.title,
+						summary: summary,
 					});
+
+					// Add the summary to the display
 					resultsHtml += `
 						<div class="summary-item">
-							<h4>${result.title}</h4>
-							<p>${result.summary}</p>
+							<h4>${article.title}</h4>
+							<p>${summary}</p>
 						</div>
 					`;
+					summaryResultsDiv.innerHTML = resultsHtml;
+				} catch (error) {
+					console.error(`Failed to summarize ${article.title}:`, error);
+					resultsHtml += `
+						<div class="summary-item">
+							<h4>${article.title}</h4>
+							<p style="color: #d32f2f;">Error: ${error instanceof Error ? error.message : "Unknown error"}</p>
+						</div>
+					`;
+					summaryResultsDiv.innerHTML = resultsHtml;
 				}
 			}
-
-			summaryResultsDiv.innerHTML = resultsHtml;
 
 			if (summaries.length > 0) {
 				await showSection(visualizeSection, "/api/generate-visualization", visualizeApiInfoDiv);
@@ -639,6 +640,53 @@
 			summarizeTextBtn.disabled = false;
 		}
 	});
+
+	async function summarizeArticleStreaming(
+		article: WikiArticle,
+		currentIndex: number,
+		totalCount: number,
+	): Promise<string> {
+		const response = await fetch("/api/summarize-stream", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ article }),
+		});
+
+		if (!response.ok) {
+			throw new Error(`Failed to summarize ${article.title}`);
+		}
+
+		// Read the stream and accumulate the text
+		const reader = response.body?.getReader();
+		if (!reader) {
+			throw new Error("No response body reader available");
+		}
+
+		const decoder = new TextDecoder();
+		let fullText = "";
+
+		while (true) {
+			const { done, value } = await reader.read();
+
+			if (done) break;
+
+			// Decode the chunk - it's plain text, not JSON
+			const chunk = decoder.decode(value, { stream: true });
+			fullText += chunk;
+
+			// Extract the last word for display
+			const words = fullText.trim().split(/\s+/);
+			const lastWord = words[words.length - 1] || "";
+
+			// Update the status message with current word
+			setStatus(
+				summaryResultsDiv,
+				`Summarizing (${currentIndex}/${totalCount}) ${lastWord}...`,
+			);
+		}
+
+		return fullText.trim();
+	}
 
 	visualizeTextBtn.addEventListener("click", async () => {
 		if (summaries.length === 0) {
