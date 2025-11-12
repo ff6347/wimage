@@ -101,10 +101,6 @@ import "../styles/shared.css";
 			#loadingMessage {
 				font-size: 18px;
 				color: #333;
-				white-space: pre-wrap;
-				word-wrap: break-word;
-				max-width: 800px;
-				text-align: left;
 			}
 
 			#visualizationContainer {
@@ -393,12 +389,9 @@ import "../styles/shared.css";
 				// Process articles one at a time with streaming
 				for (let i = 0; i < articles.length; i++) {
 					const article = articles[i];
-					updateLoadingMessage(
-						`Summarizing article ${i + 1}/${articles.length}: ${article.title}...`,
-					);
 
 					try {
-						const summary = await summarizeArticleStreaming(article);
+						const summary = await summarizeArticleStreaming(article, i + 1, articles.length);
 						summaries.push({
 							title: article.title,
 							summary: summary,
@@ -414,6 +407,8 @@ import "../styles/shared.css";
 
 			async function summarizeArticleStreaming(
 				article: WikiArticle,
+				currentIndex: number,
+				totalCount: number,
 			): Promise<string> {
 				const response = await fetch("/api/summarize-stream", {
 					method: "POST",
@@ -443,9 +438,13 @@ import "../styles/shared.css";
 					const chunk = decoder.decode(value, { stream: true });
 					fullText += chunk;
 
-					// Update the loading message to show streaming text in real-time
+					// Extract the last few words for display (show last 3-5 words)
+					const words = fullText.trim().split(/\s+/);
+					const lastWord = words[words.length - 1] || "";
+
+					// Update the loading message to show only the current word
 					updateLoadingMessage(
-						`Summarizing: ${article.title}\n\n${fullText}`,
+						`Summarizing (${currentIndex}/${totalCount}) ${lastWord}...`,
 					);
 				}
 
