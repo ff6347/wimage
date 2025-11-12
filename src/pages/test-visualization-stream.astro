@@ -1,0 +1,314 @@
+---
+// Test page for streaming visualization generation
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Test Streaming Visualization</title>
+		<style>
+			body {
+				font-family: system-ui, -apple-system, sans-serif;
+				margin: 0;
+				padding: 2rem;
+				background: #f5f5f5;
+				display: grid;
+				grid-template-columns: 400px 1fr;
+				gap: 2rem;
+				height: 100vh;
+				box-sizing: border-box;
+			}
+
+			.controls {
+				display: flex;
+				flex-direction: column;
+				gap: 1rem;
+			}
+
+			h1 {
+				margin: 0 0 1rem 0;
+				font-size: 1.5rem;
+			}
+
+			textarea {
+				width: 100%;
+				min-height: 200px;
+				padding: 1rem;
+				border: 1px solid #ddd;
+				border-radius: 4px;
+				font-family: inherit;
+				font-size: 14px;
+				resize: vertical;
+			}
+
+			button {
+				padding: 0.75rem 1.5rem;
+				background: #0066cc;
+				color: white;
+				border: none;
+				border-radius: 4px;
+				cursor: pointer;
+				font-size: 1rem;
+			}
+
+			button:hover {
+				background: #0052a3;
+			}
+
+			button:disabled {
+				background: #ccc;
+				cursor: not-allowed;
+			}
+
+			.status {
+				padding: 0.75rem;
+				border-radius: 4px;
+				font-size: 0.9rem;
+			}
+
+			.status.streaming {
+				background: #e3f2fd;
+				color: #1976d2;
+			}
+
+			.status.complete {
+				background: #e8f5e9;
+				color: #388e3c;
+			}
+
+			.status.error {
+				background: #ffebee;
+				color: #c62828;
+			}
+
+			.preview {
+				border: 2px solid #ddd;
+				background: white;
+				border-radius: 4px;
+				overflow: hidden;
+				position: relative;
+			}
+
+			iframe {
+				width: 100%;
+				height: 100%;
+				border: none;
+			}
+
+			.stats {
+				font-size: 12px;
+				color: #666;
+				margin-top: 0.5rem;
+			}
+
+			.debounce-settings {
+				display: flex;
+				flex-direction: column;
+				gap: 0.5rem;
+				padding: 1rem;
+				background: white;
+				border-radius: 4px;
+			}
+
+			.debounce-settings label {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				font-size: 14px;
+			}
+
+			.debounce-settings input[type="range"] {
+				width: 150px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="controls">
+			<h1>Streaming Visualization Test</h1>
+
+			<div class="debounce-settings">
+				<label>
+					Update Delay (ms):
+					<input
+						type="range"
+						id="debounceDelay"
+						min="0"
+						max="1000"
+						step="50"
+						value="100"
+					/>
+					<span id="debounceValue">100ms</span>
+				</label>
+				<p style="font-size: 12px; color: #666; margin: 0;">
+					Controls how often the iframe updates during streaming
+				</p>
+			</div>
+
+			<textarea id="summaries" placeholder="Enter summaries JSON...">
+[
+  {
+    "title": "Artificial Intelligence",
+    "summary": "AI demonstrates machine intelligence through learning and problem-solving capabilities."
+  },
+  {
+    "title": "Typography",
+    "summary": "Typography is the art of arranging type to make written language legible and appealing."
+  },
+  {
+    "title": "Design",
+    "summary": "Design combines aesthetics and functionality to create meaningful visual experiences."
+  }
+]
+			</textarea>
+
+			<button id="streamBtn">Start Streaming</button>
+
+			<div id="status" class="status" style="display: none;"></div>
+
+			<div class="stats">
+				<div>Chunks received: <span id="chunkCount">0</span></div>
+				<div>HTML size: <span id="htmlSize">0</span> bytes</div>
+				<div>Updates applied: <span id="updateCount">0</span></div>
+			</div>
+		</div>
+
+		<div class="preview">
+			<iframe id="preview"></iframe>
+		</div>
+
+		<script>
+			const summariesInput = document.getElementById(
+				"summaries",
+			) as HTMLTextAreaElement;
+			const streamBtn = document.getElementById(
+				"streamBtn",
+			) as HTMLButtonElement;
+			const statusDiv = document.getElementById("status") as HTMLDivElement;
+			const preview = document.getElementById("preview") as HTMLIFrameElement;
+			const chunkCountSpan = document.getElementById(
+				"chunkCount",
+			) as HTMLSpanElement;
+			const htmlSizeSpan = document.getElementById(
+				"htmlSize",
+			) as HTMLSpanElement;
+			const updateCountSpan = document.getElementById(
+				"updateCount",
+			) as HTMLSpanElement;
+			const debounceDelayInput = document.getElementById(
+				"debounceDelay",
+			) as HTMLInputElement;
+			const debounceValueSpan = document.getElementById(
+				"debounceValue",
+			) as HTMLSpanElement;
+
+			let chunkCount = 0;
+			let updateCount = 0;
+			let debounceTimeout: number | null = null;
+			let pendingHTML = "";
+
+			// Update debounce value display
+			debounceDelayInput.addEventListener("input", () => {
+				debounceValueSpan.textContent = `${debounceDelayInput.value}ms`;
+			});
+
+			function updateIframe(html: string) {
+				preview.srcdoc = html;
+				updateCount++;
+				updateCountSpan.textContent = updateCount.toString();
+				htmlSizeSpan.textContent = html.length.toString();
+			}
+
+			function debouncedUpdateIframe(html: string) {
+				pendingHTML = html;
+
+				const delay = parseInt(debounceDelayInput.value);
+
+				if (delay === 0) {
+					// No debouncing
+					updateIframe(html);
+					return;
+				}
+
+				// Clear existing timeout
+				if (debounceTimeout !== null) {
+					clearTimeout(debounceTimeout);
+				}
+
+				// Set new timeout
+				debounceTimeout = window.setTimeout(() => {
+					updateIframe(pendingHTML);
+					debounceTimeout = null;
+				}, delay);
+			}
+
+			streamBtn.addEventListener("click", async () => {
+				// Reset stats
+				chunkCount = 0;
+				updateCount = 0;
+				chunkCountSpan.textContent = "0";
+				htmlSizeSpan.textContent = "0";
+				updateCountSpan.textContent = "0";
+
+				streamBtn.disabled = true;
+				statusDiv.style.display = "block";
+				statusDiv.className = "status streaming";
+				statusDiv.textContent = "Streaming visualization...";
+
+				try {
+					// Parse summaries
+					const summaries = JSON.parse(summariesInput.value);
+
+					const response = await fetch("/api/generate-visualization-stream", {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify({ summaries }),
+					});
+
+					if (!response.ok) {
+						throw new Error(`HTTP error! status: ${response.status}`);
+					}
+
+					// Read the stream
+					const reader = response.body!.getReader();
+					const decoder = new TextDecoder();
+					let fullHTML = "";
+
+					while (true) {
+						const { done, value } = await reader.read();
+
+						if (done) {
+							// Final update with complete HTML
+							if (debounceTimeout !== null) {
+								clearTimeout(debounceTimeout);
+							}
+							updateIframe(fullHTML);
+
+							statusDiv.className = "status complete";
+							statusDiv.textContent = "✓ Streaming complete!";
+							break;
+						}
+
+						// Decode and append the chunk
+						const chunk = decoder.decode(value, { stream: true });
+						fullHTML += chunk;
+						chunkCount++;
+						chunkCountSpan.textContent = chunkCount.toString();
+
+						// Update iframe with debouncing
+						debouncedUpdateIframe(fullHTML);
+					}
+				} catch (error) {
+					console.error("Error:", error);
+					statusDiv.className = "status error";
+					statusDiv.textContent = `Error: ${error instanceof Error ? error.message : "Unknown error"}`;
+				} finally {
+					streamBtn.disabled = false;
+				}
+			});
+		</script>
+	</body>
+</html>
