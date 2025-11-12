@@ -823,7 +823,9 @@
 			});
 
 			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`);
+				const errorText = await response.text();
+				console.error("Visualization stream error:", errorText);
+				throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
 			}
 
 			// Create iframe immediately
@@ -840,11 +842,15 @@
 			let fullHTML = "";
 			let debounceTimeout = null;
 			const debounceDelay = 100; // ms
+			let chunkCount = 0;
+
+			console.log("Starting to read visualization stream...");
 
 			while (true) {
 				const { done, value } = await reader.read();
 
 				if (done) {
+					console.log(`Stream complete. Total chunks: ${chunkCount}, HTML length: ${fullHTML.length}`);
 					// Final update with complete HTML
 					if (debounceTimeout !== null) {
 						clearTimeout(debounceTimeout);
@@ -863,6 +869,7 @@
 					}
 					cleanHTML = cleanHTML.trim();
 
+					console.log("Final HTML length:", cleanHTML.length);
 					iframe.srcdoc = cleanHTML;
 					break;
 				}
@@ -870,6 +877,11 @@
 				// Decode and append the chunk
 				const chunk = decoder.decode(value, { stream: true });
 				fullHTML += chunk;
+				chunkCount++;
+
+				if (chunkCount % 10 === 0) {
+					console.log(`Received ${chunkCount} chunks, current HTML length: ${fullHTML.length}`);
+				}
 
 				// Update iframe with debouncing
 				if (debounceTimeout !== null) {
