@@ -11,6 +11,7 @@ import {
 	getClientId,
 	createRateLimitErrorResponse,
 } from "../../lib/cors";
+import { LARGE_MODEL } from "../../lib/constants";
 
 interface StreamSummaryRequest {
 	title: string;
@@ -18,7 +19,7 @@ interface StreamSummaryRequest {
 }
 
 const SYSTEM_PROMPT =
-	"You are a helpful assistant that extracts key facts from Wikipedia articles. Summarize 5 most important sections of the article into exactly one short, clear sentence each that captures the most important information. Be concise and informative. Then create a new Wikipedia article based on the content. Keep it short as the goal is to provide a quick overview. Return ONLY the summary text without any additional commentary.";
+	"You are a helpful assistant that extracts key facts from Wikipedia articles. Summarize 3 most important sections of the article into exactly one short, clear sentence each that captures the most important information. Be concise and informative. Then create a new Wikipedia article based on the content. Keep it short as the goal is to provide a quick overview. Return ONLY the summary text without any additional commentary.";
 
 export const GET: APIRoute = async () => {
 	return new Response(
@@ -27,7 +28,7 @@ export const GET: APIRoute = async () => {
 			description:
 				"Streams Wikipedia article summaries using OpenAI via Vercel AI SDK",
 			method: "POST",
-			model: "gpt-4o",
+			model: LARGE_MODEL,
 			systemPrompt: SYSTEM_PROMPT,
 			streaming: true,
 		}),
@@ -74,7 +75,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
 		// Create the streaming text response
 		const result = streamText({
-			model: openai("gpt-4o"),
+			model: openai(LARGE_MODEL),
 			system: SYSTEM_PROMPT,
 			messages: [
 				{

@@ -1,5 +1,5 @@
 // ABOUTME: API route for generating expressive spatial typography visualizations using OpenAI
-// ABOUTME: Accepts summaries and uses GPT-4o-mini to create unique HTML/CSS for each visualization
+// ABOUTME: Accepts summaries and uses GPT-5-mini to create unique HTML/CSS for each visualization
 
 import type { APIRoute } from "astro";
 import OpenAI from "openai";
@@ -10,6 +10,7 @@ import {
 	getClientId,
 	createRateLimitErrorResponse,
 } from "../../lib/cors";
+import { LARGE_MODEL } from "../../lib/constants";
 
 interface Summary {
 	title: string;
@@ -45,9 +46,10 @@ export const GET: APIRoute = async () => {
 	return new Response(
 		JSON.stringify({
 			endpoint: "/api/generate-visualization",
-			description: "Generates expressive spatial typography visualizations using OpenAI",
+			description:
+				"Generates expressive spatial typography visualizations using OpenAI",
 			method: "POST",
-			model: "gpt-5",
+			model: LARGE_MODEL,
 			systemPrompt: SYSTEM_PROMPT,
 		}),
 		{ status: 200, headers: { "Content-Type": "application/json" } },
@@ -98,7 +100,7 @@ ${summariesText}
 Return ONLY the complete HTML code, no explanations or markdown formatting.`;
 
 		const completion = await openai.chat.completions.create({
-			model: "gpt-5",
+			model: LARGE_MODEL,
 			messages: [
 				{
 					role: "system",

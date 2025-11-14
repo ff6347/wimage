@@ -2,9 +2,9 @@
 	"nodes":[
 		{"id":"user-actions","type":"text","text":"**User Actions**\n• Start camera\n• Capture image\n• Trigger analysis\n• View results at each step","x":-880,"y":-410,"width":250,"height":170},
 		{"id":"camera-input","type":"text","text":"**User Camera**\nCapture image from webcam","x":-880,"y":0,"width":250,"height":140},
-		{"id":"extract-json","type":"text","text":"**Extract JSON**\n/api/extract-json\nGPT-4o-mini: Parse items to array","x":180,"y":0,"width":250,"height":140},
+		{"id":"extract-json","type":"text","text":"**Extract JSON**\n/api/extract-json\nGPT-5-mini: Parse items to array","x":180,"y":0,"width":250,"height":140},
 		{"id":"moondream-analyze","type":"text","text":"**Moondream Vision AI**\n/api/analyze\nDescribe image, identify 3 items","x":-350,"y":-10,"width":250,"height":150},
-		{"id":"clean-terms","type":"text","text":"**Clean Terms**\n/api/clean-terms\nGPT-4o-mini: Normalize for Wikipedia","x":180,"y":300,"width":250,"height":100},
+		{"id":"clean-terms","type":"text","text":"**Clean Terms**\n/api/clean-terms\nGPT-5-mini: Normalize for Wikipedia","x":180,"y":300,"width":250,"height":100},
 		{"id":"check-wikipedia","type":"text","text":"**Check Wikipedia**\n/api/check-wikipedia\nFind existing articles","x":175,"y":540,"width":250,"height":100},
 		{"id":"fetch-text","type":"text","text":"**Fetch Article Text**\n/api/fetch-wikipedia-text\nRetrieve full article content","x":725,"y":540,"width":250,"height":100},
 		{"id":"summarize","type":"text","text":"**Summarize**\n/api/summarize-text\nGPT-5: Extract key facts","x":725,"y":1040,"width":250,"height":100},

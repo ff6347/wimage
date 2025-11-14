@@ -50,7 +50,7 @@ hurl --test --verbose docs/extract-json.hurl
 ## API Endpoints
 
 ### POST /api/generate-visualization
-Generates unique expressive HTML pages with spatial typography using OpenAI GPT-4o Mini.
+Generates unique expressive HTML pages with spatial typography using OpenAI GPT-5 Mini.
 
 **Request:**
 ```json
@@ -199,11 +199,11 @@ Analyzes images using Moondream vision AI.
 The app follows this data flow:
 
 1. **Capture Image** → `/api/analyze` (Moondream)
-2. **Extract JSON** → `/api/extract-json` (OpenAI GPT-4o Mini)
+2. **Extract JSON** → `/api/extract-json` (OpenAI GPT-5 Mini)
 3. **Check Wikipedia** → `/api/check-wikipedia` (MediaWiki API)
 4. **Fetch Article Text** → `/api/fetch-wikipedia-text` (MediaWiki API)
-5. **Summarize Articles** → `/api/summarize-text` (OpenAI GPT-4o Mini)
-6. **Generate Visualization** → `/api/generate-visualization` (OpenAI GPT-4o Mini)
+5. **Summarize Articles** → `/api/summarize-text` (OpenAI GPT-5 Mini)
+6. **Generate Visualization** → `/api/generate-visualization` (OpenAI GPT-5 Mini)
 
 ## Iterating on the Visualization Prompt
 

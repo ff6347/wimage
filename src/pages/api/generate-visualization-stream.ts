@@ -11,13 +11,34 @@ import {
 	getClientId,
 	createRateLimitErrorResponse,
 } from "../../lib/cors";
+import { LARGE_MODEL } from "../../lib/constants";
 
 interface Summary {
 	title: string;
 	summary: string;
 }
 
-const SYSTEM_PROMPT = `You are an expert in expressive web typography and creative web design!
+const SYSTEM_PROMPT = `You are an expert in expressive web typography and creative web design that has internalized the laws of gestalt and color theory!
+
+Remember Gestalt works are better when you consider:
+- Proximity
+- Similarity
+- Continuity
+- Closure
+- Figure/Ground
+- Symmetry & Order
+
+Remember Colors are better when you consider:
+- Contrast
+- Saturation
+- Hue
+- Temperature
+- Monochromatic vs Complementary
+- Triadic
+- Analogous
+- Tetradic
+- Split-Complementary
+- Color Harmony
 
 Requirements:
 - Create a complete HTML document with DOCTYPE, head, and body
@@ -27,15 +48,15 @@ Requirements:
 - You are specialized in generative typographic art.
 - Use only one font but vary weights and sizes.
 - Use absolute positioning for layout.
-- No images or illustrations, only text-based design.
+- NO images or illustrations, only text-based design.
+- NO need to use all the text.
 - Focus on experimental and artistic layouts.
 - Avoid traditional article structures.
 - Create unique, artistic HTML pages with experimental spatial layouts.
-- No need to use all the text.
 - Simplify and abstract the information to create a visual experience.
 - Try do work on depth.
 
-- Use reduced colors and high contrast. White background and expressive colors.
+- White background and expressive colors. High contrast.
 - Use the text to create a mixture of the information instead of just making it look like an article.
 - NO ROUNDED CORNERS.
 - VERY IMPORTANT! You always return complete, valid HTML documents.
@@ -50,7 +71,7 @@ export const GET: APIRoute = async () => {
 			description:
 				"Experimental streaming visualization generation using Vercel AI SDK",
 			method: "POST",
-			model: "gpt-5",
+			model: LARGE_MODEL,
 			systemPrompt: SYSTEM_PROMPT,
 			streaming: true,
 		}),
@@ -106,11 +127,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
 		});
 
 		// Create the streaming text response
-		console.log("Creating streaming visualization with summaries:", summaries.length);
+		console.log(
+			"Creating streaming visualization with summaries:",
+			summaries.length,
+		);
 		console.log("Formatted summaries:", formattedSummaries.substring(0, 200));
 
 		const result = streamText({
-			model: openai("gpt-5"),
+			model: openai(LARGE_MODEL),
 			system: SYSTEM_PROMPT,
 			messages: [
 				{
