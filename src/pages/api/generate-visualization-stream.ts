@@ -50,7 +50,7 @@ export const GET: APIRoute = async () => {
 			description:
 				"Experimental streaming visualization generation using Vercel AI SDK",
 			method: "POST",
-			model: "gpt-5",
+			model: "gpt-4o",
 			systemPrompt: SYSTEM_PROMPT,
 			streaming: true,
 		}),
@@ -109,8 +109,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
 		console.log("Creating streaming visualization with summaries:", summaries.length);
 		console.log("Formatted summaries:", formattedSummaries.substring(0, 200));
 
-		const result = await streamText({
-			model: openai("gpt-5"),
+		const result = streamText({
+			model: openai("gpt-4o"),
 			system: SYSTEM_PROMPT,
 			messages: [
 				{
