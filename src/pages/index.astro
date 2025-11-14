@@ -31,3 +31,19 @@ import "../styles/shared.css";
 		color: #666;
 	}
 </style>
+
+<script>
+	console.debug("debug at:");
+	console.debug(
+		`${location.protocol}//${location.hostname}${location.port ? `:${location.port}` : ""}/test-visualization-stream`,
+	);
+	console.debug(
+		`${location.protocol}//${location.hostname}${location.port ? `:${location.port}` : ""}/test-summary-stream`,
+	);
+
+	console.info("--------------------");
+	console.info("demo at:");
+	console.info(
+		`${location.protocol}//${location.hostname}${location.port ? `:${location.port}` : ""}/demo`,
+	);
+</script>

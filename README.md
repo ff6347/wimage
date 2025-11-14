@@ -11,10 +11,10 @@ Created during a generative AI workshop by Ivan Iovine as part of master studies
 WImage takes a photo from your webcam and processes it through a creative pipeline:
 
 1. **Vision AI Analysis** - Moondream identifies objects in the image
-2. **Term Extraction** - GPT-4o-mini extracts key items
+2. **Term Extraction** - GPT-5-mini extracts key items
 3. **Knowledge Retrieval** - Wikipedia articles are fetched for identified objects
-4. **Summarization** - GPT-5 distills key facts from articles
-5. **Visualization** - GPT-5 generates unique expressive typography HTML
+4. **Summarization** - GPT-5.1 distills key facts from articles
+5. **Visualization** - GPT-5.1 generates unique expressive typography HTML
 
 The result is a creative, text-based visual experience inspired by what the AI sees in your photo.
 
@@ -105,7 +105,7 @@ Built-in rate limiting protects against abuse while allowing legitimate usage. L
 
 - **[Astro](https://astro.build)** - Web framework
 - **[Moondream AI](https://moondream.ai)** - Vision language model
-- **[OpenAI GPT-4o-mini & GPT-5](https://openai.com)** - Text processing and generation
+- **[OpenAI GPT-5-mini & GPT-5](https://openai.com)** - Text processing and generation
 - **[Wikipedia MediaWiki API](https://www.mediawiki.org/wiki/API)** - Knowledge retrieval
 - **TypeScript** - Type-safe development
 

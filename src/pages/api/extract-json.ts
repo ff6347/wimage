@@ -1,5 +1,5 @@
 // ABOUTME: API route for extracting JSON from Moondream results using OpenAI
-// ABOUTME: Accepts Moondream response text and uses GPT-4o Mini to parse it into structured JSON
+// ABOUTME: Accepts Moondream response text and uses GPT-5 Mini to parse it into structured JSON
 
 import type { APIRoute } from "astro";
 import OpenAI from "openai";
@@ -11,6 +11,7 @@ import {
 	createRateLimitErrorResponse,
 } from "../../lib/cors";
 import { observationsSchema } from "../../lib/json-schema";
+import { SMALL_MODEL } from "../../lib/constants";
 
 const SYSTEM_PROMPT = `You are a JSON data extract tool. You get some text that should contain a JSON string. For example
 'Results:
@@ -25,7 +26,7 @@ export const GET: APIRoute = async () => {
 			description:
 				"Extracts structured JSON from Moondream results using OpenAI",
 			method: "POST",
-			model: "gpt-4o-mini",
+			model: SMALL_MODEL,
 			systemPrompt: SYSTEM_PROMPT,
 		}),
 		{ status: 200, headers: { "Content-Type": "application/json" } },
@@ -67,7 +68,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 		const openai = new OpenAI({ apiKey: openaiKey });
 
 		const completion = await openai.chat.completions.create({
-			model: "gpt-4o-mini",
+			model: SMALL_MODEL,
 			messages: [
 				{
 					role: "system",

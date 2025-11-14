@@ -11,6 +11,7 @@ import {
 	createRateLimitErrorResponse,
 } from "../../lib/cors";
 import { observationsSchema } from "../../lib/json-schema";
+import { SMALL_MODEL } from "../../lib/constants";
 
 interface CleanTermsRequest {
 	items: string[];
@@ -33,7 +34,7 @@ export const GET: APIRoute = async () => {
 			endpoint: "/api/clean-terms",
 			description: "Cleans extracted terms for Wikipedia lookup using OpenAI",
 			method: "POST",
-			model: "gpt-4o-mini",
+			model: SMALL_MODEL,
 			systemPrompt: SYSTEM_PROMPT,
 		}),
 		{ status: 200, headers: { "Content-Type": "application/json" } },
@@ -75,7 +76,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 		const openai = new OpenAI({ apiKey: openaiKey });
 
 		const completion = await openai.chat.completions.create({
-			model: "gpt-4o-mini",
+			model: SMALL_MODEL,
 			messages: [
 				{
 					role: "system",

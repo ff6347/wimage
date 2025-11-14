@@ -8,14 +8,18 @@ const MAX_REQUESTS_PER_WINDOW = 10; // 10 requests per minute
 export function validateOrigin(request: Request): boolean {
 	const origin = request.headers.get("origin");
 	const referer = request.headers.get("referer");
-
-	// If no origin or referer, reject (likely direct API call)
-	if (!origin && !referer) {
-		return false;
-	}
-
 	const requestUrl = new URL(request.url);
 	const expectedHost = requestUrl.host;
+
+	// If no origin or referer header, check if it's a same-origin request
+	if (!origin && !referer) {
+		// In development with localhost, allow requests without origin/referer
+		// This happens with fetch() calls from same-origin pages
+		if (expectedHost.includes('localhost') || expectedHost.includes('127.0.0.1')) {
+			return true;
+		}
+		return false;
+	}
 
 	// Check origin
 	if (origin) {
