@@ -816,31 +816,79 @@
 		visualizeTextBtn.disabled = true;
 
 		try {
-			console.log("Fetching visualization...");
-			const response = await fetch("/api/generate-visualization", {
+			console.log("Starting streaming visualization...");
+			const response = await fetch("/api/generate-visualization-stream", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ summaries }),
 			});
 
-			console.log("Response status:", response.status);
-			const data = await response.json();
-
 			if (!response.ok) {
-				throw new Error(data.error || "Failed to generate visualization");
+				throw new Error(`HTTP error! status: ${response.status}`);
 			}
 
-			iframeContainer.innerHTML = "";
+			// Read the stream
+			const reader = response.body?.getReader();
+			if (!reader) {
+				throw new Error("No response body reader available");
+			}
 
+			const decoder = new TextDecoder();
+			let fullHTML = "";
+
+			// Create iframe immediately for progressive rendering
+			iframeContainer.innerHTML = "";
 			const iframe = document.createElement("iframe");
 			iframe.style.width = "100%";
 			iframe.style.minHeight = "600px";
 			iframe.style.border = "none";
-			iframe.srcdoc = data.html;
-
 			iframeContainer.appendChild(iframe);
 
-			iframe.scrollIntoView({ behavior: "smooth", block: "start" });
+			let updateTimeout: number | null = null;
+
+			while (true) {
+				const { done, value } = await reader.read();
+
+				if (done) {
+					// Final update with complete HTML
+					if (updateTimeout !== null) {
+						clearTimeout(updateTimeout);
+					}
+
+					// Strip markdown code fences if present
+					let cleanHTML = fullHTML.trim();
+					if (cleanHTML.startsWith("```html")) {
+						cleanHTML = cleanHTML.substring(7);
+					}
+					if (cleanHTML.startsWith("```")) {
+						cleanHTML = cleanHTML.substring(3);
+					}
+					if (cleanHTML.endsWith("```")) {
+						cleanHTML = cleanHTML.substring(0, cleanHTML.length - 3);
+					}
+					cleanHTML = cleanHTML.trim();
+
+					iframe.srcdoc = cleanHTML;
+					iframe.scrollIntoView({ behavior: "smooth", block: "start" });
+					break;
+				}
+
+				// Decode and append the chunk
+				const chunk = decoder.decode(value, { stream: true });
+				fullHTML += chunk;
+
+				// Debounced iframe update (100ms delay)
+				if (updateTimeout !== null) {
+					clearTimeout(updateTimeout);
+				}
+
+				updateTimeout = window.setTimeout(() => {
+					iframe.srcdoc = fullHTML;
+					updateTimeout = null;
+				}, 100);
+			}
+
+			console.log("Streaming visualization complete");
 		} catch (error) {
 			console.error("Visualization error:", error);
 			iframeContainer.innerHTML = `<p style="color: #d32f2f;">Error: ${error instanceof Error ? error.message : "Unknown error"}</p>`;
