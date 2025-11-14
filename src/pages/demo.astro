@@ -486,19 +486,53 @@ import "../styles/shared.css";
 			async function generateVisualization(
 				summaries: Summary[],
 			): Promise<string> {
-				const response = await fetch("/api/generate-visualization", {
+				const response = await fetch("/api/generate-visualization-stream", {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({ summaries }),
 				});
 
-				const data = await response.json();
-
 				if (!response.ok) {
-					throw new Error(data.error || "Failed to generate visualization");
+					throw new Error(`HTTP error! status: ${response.status}`);
 				}
 
-				return data.html;
+				// Read the stream and accumulate the HTML
+				const reader = response.body?.getReader();
+				if (!reader) {
+					throw new Error("No response body reader available");
+				}
+
+				const decoder = new TextDecoder();
+				let fullHTML = "";
+
+				while (true) {
+					const { done, value } = await reader.read();
+
+					if (done) break;
+
+					// Decode the chunk
+					const chunk = decoder.decode(value, { stream: true });
+					fullHTML += chunk;
+
+					// Extract last word for progressive feedback
+					const words = fullHTML.trim().split(/\s+/);
+					const lastWord = words[words.length - 1] || "";
+					updateLoadingMessageParts("Generating visualization", `${lastWord}...`);
+				}
+
+				// Strip markdown code fences if present
+				let cleanHTML = fullHTML.trim();
+				if (cleanHTML.startsWith("```html")) {
+					cleanHTML = cleanHTML.substring(7);
+				}
+				if (cleanHTML.startsWith("```")) {
+					cleanHTML = cleanHTML.substring(3);
+				}
+				if (cleanHTML.endsWith("```")) {
+					cleanHTML = cleanHTML.substring(0, cleanHTML.length - 3);
+				}
+
+				return cleanHTML.trim();
 			}
 
 			function showVisualization(html: string) {
