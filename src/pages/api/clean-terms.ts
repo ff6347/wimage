@@ -1,8 +1,9 @@
-// ABOUTME: API route for cleaning extracted terms using OpenAI
+// ABOUTME: API route for cleaning extracted terms using OpenAI via Vercel AI SDK
 // ABOUTME: Converts plural to singular and reduces multi-word phrases to single best word for Wikipedia
 
 import type { APIRoute } from "astro";
-import OpenAI from "openai";
+import { generateText } from "ai";
+import { createOpenAI } from "@ai-sdk/openai";
 import {
 	validateOrigin,
 	createCorsErrorResponse,
@@ -10,7 +11,6 @@ import {
 	getClientId,
 	createRateLimitErrorResponse,
 } from "../../lib/cors";
-import { observationsSchema } from "../../lib/json-schema";
 import { SMALL_MODEL } from "../../lib/constants";
 
 interface CleanTermsRequest {
@@ -73,32 +73,31 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			);
 		}
 
-		const openai = new OpenAI({ apiKey: openaiKey });
+		// Create OpenAI provider instance with API key
+		const openai = createOpenAI({
+			apiKey: openaiKey,
+		});
 
-		const completion = await openai.chat.completions.create({
-			model: SMALL_MODEL,
+		const { text } = await generateText({
+			model: openai(SMALL_MODEL),
+			system: SYSTEM_PROMPT,
 			messages: [
-				{
-					role: "system",
-					content: SYSTEM_PROMPT,
-				},
 				{
 					role: "user",
 					content: `Clean these terms: ${JSON.stringify(data.items)}`,
 				},
 			],
-			response_format: observationsSchema,
+			output: "json",
 		});
 
-		const resultText = completion.choices[0]?.message?.content;
-		if (!resultText) {
+		if (!text) {
 			return new Response(
 				JSON.stringify({ error: "No response from OpenAI" }),
 				{ status: 500, headers: { "Content-Type": "application/json" } },
 			);
 		}
 
-		const result = JSON.parse(resultText) as CleanTermsResponse;
+		const result = JSON.parse(text) as CleanTermsResponse;
 
 		return new Response(
 			JSON.stringify({

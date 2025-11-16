@@ -1,8 +1,9 @@
-// ABOUTME: API route for extracting JSON from Moondream results using OpenAI
+// ABOUTME: API route for extracting JSON from Moondream results using OpenAI via Vercel AI SDK
 // ABOUTME: Accepts Moondream response text and uses GPT-5 Mini to parse it into structured JSON
 
 import type { APIRoute } from "astro";
-import OpenAI from "openai";
+import { generateText } from "ai";
+import { createOpenAI } from "@ai-sdk/openai";
 import {
 	validateOrigin,
 	createCorsErrorResponse,
@@ -10,7 +11,6 @@ import {
 	getClientId,
 	createRateLimitErrorResponse,
 } from "../../lib/cors";
-import { observationsSchema } from "../../lib/json-schema";
 import { SMALL_MODEL } from "../../lib/constants";
 
 const SYSTEM_PROMPT = `You are a JSON data extract tool. You get some text that should contain a JSON string. For example
@@ -65,33 +65,31 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			);
 		}
 
-		const openai = new OpenAI({ apiKey: openaiKey });
+		// Create OpenAI provider instance with API key
+		const openai = createOpenAI({
+			apiKey: openaiKey,
+		});
 
-		const completion = await openai.chat.completions.create({
-			model: SMALL_MODEL,
+		const { text } = await generateText({
+			model: openai(SMALL_MODEL),
+			system: SYSTEM_PROMPT,
 			messages: [
-				{
-					role: "system",
-					content: SYSTEM_PROMPT,
-				},
 				{
 					role: "user",
 					content: moondreamResult,
 				},
 			],
-			response_format: observationsSchema,
+			output: "json",
 		});
 
-		const extractedContent = completion.choices[0]?.message?.content;
-
-		if (!extractedContent) {
+		if (!text) {
 			return new Response(
 				JSON.stringify({ error: "No content extracted from OpenAI" }),
 				{ status: 500, headers: { "Content-Type": "application/json" } },
 			);
 		}
 
-		const parsed = JSON.parse(extractedContent);
+		const parsed = JSON.parse(text);
 
 		return new Response(
 			JSON.stringify({

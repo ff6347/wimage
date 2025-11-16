@@ -1,8 +1,9 @@
-// ABOUTME: API route for summarizing Wikipedia text using OpenAI
+// ABOUTME: API route for summarizing Wikipedia text using OpenAI via Vercel AI SDK
 // ABOUTME: Accepts Wikipedia article text and extracts key facts into two short sentences
 
 import type { APIRoute } from "astro";
-import OpenAI from "openai";
+import { generateText } from "ai";
+import { createOpenAI } from "@ai-sdk/openai";
 import {
 	validateOrigin,
 	createCorsErrorResponse,
@@ -71,7 +72,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			);
 		}
 
-		const openai = new OpenAI({ apiKey: openaiKey });
+		// Create OpenAI provider instance with API key
+		const openai = createOpenAI({
+			apiKey: openaiKey,
+		});
 
 		const results: SummaryResult[] = await Promise.all(
 			articles.map(async (article: SummaryRequest) => {
@@ -84,33 +88,29 @@ export const POST: APIRoute = async ({ request, locals }) => {
 				}
 
 				try {
-					const completion = await openai.chat.completions.create({
-						model: LARGE_MODEL,
+					const { text } = await generateText({
+						model: openai(LARGE_MODEL),
+						system: SYSTEM_PROMPT,
 						messages: [
-							{
-								role: "system",
-								content: SYSTEM_PROMPT,
-							},
 							{
 								role: "user",
 								content: `Article title: ${article.title}\n\nArticle text:\n${article.text}`,
 							},
 						],
-						// max_completion_tokens: 1000,
+						// maxTokens: 1000,
 					});
 
 					console.log(
 						`Completion response for "${article.title}":`,
-						JSON.stringify(completion, null, 2),
+						text,
 					);
 
-					const summary =
-						completion.choices[0]?.message?.content || "No summary generated";
+					const summary = text || "No summary generated";
 
 					if (!summary || summary === "No summary generated") {
 						console.error(
 							`Empty summary for "${article.title}". Full response:`,
-							completion,
+							text,
 						);
 					}
 
