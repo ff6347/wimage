@@ -2,8 +2,9 @@
 // ABOUTME: Accepts Moondream response text and uses GPT-5 Mini to parse it into structured JSON
 
 import type { APIRoute } from "astro";
-import { generateText } from "ai";
+import { generateObject } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
+import { z } from "zod";
 import {
 	validateOrigin,
 	createCorsErrorResponse,
@@ -12,6 +13,15 @@ import {
 	createRateLimitErrorResponse,
 } from "../../lib/cors";
 import { SMALL_MODEL } from "../../lib/constants";
+
+// Zod schema for structured output validation matching original observationsSchema
+const extractJsonSchema = z.object({
+	items: z
+		.array(z.string())
+		.min(0)
+		.max(3)
+		.describe("Array of extracted observations from the image (0-3 items)"),
+});
 
 const SYSTEM_PROMPT = `You are a JSON data extract tool. You get some text that should contain a JSON string. For example
 'Results:
@@ -70,31 +80,24 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			apiKey: openaiKey,
 		});
 
-		const { text } = await generateText({
+		const { object } = await generateObject({
 			model: openai(SMALL_MODEL),
+			schema: extractJsonSchema,
 			system: SYSTEM_PROMPT,
-			messages: [
-				{
-					role: "user",
-					content: moondreamResult,
-				},
-			],
-			output: "json",
+			prompt: moondreamResult,
 		});
 
-		if (!text) {
+		if (!object || !object.items) {
 			return new Response(
 				JSON.stringify({ error: "No content extracted from OpenAI" }),
 				{ status: 500, headers: { "Content-Type": "application/json" } },
 			);
 		}
 
-		const parsed = JSON.parse(text);
-
 		return new Response(
 			JSON.stringify({
 				success: true,
-				data: parsed,
+				data: object,
 				rawResult: moondreamResult,
 			}),
 			{

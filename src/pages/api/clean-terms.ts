@@ -2,8 +2,9 @@
 // ABOUTME: Converts plural to singular and reduces multi-word phrases to single best word for Wikipedia
 
 import type { APIRoute } from "astro";
-import { generateText } from "ai";
+import { generateObject } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
+import { z } from "zod";
 import {
 	validateOrigin,
 	createCorsErrorResponse,
@@ -17,9 +18,12 @@ interface CleanTermsRequest {
 	items: string[];
 }
 
-interface CleanTermsResponse {
-	items: string[];
-}
+// Zod schema for structured output validation
+const cleanTermsSchema = z.object({
+	items: z
+		.array(z.string())
+		.describe("Array of cleaned terms in singular form, maintaining input order"),
+});
 
 const SYSTEM_PROMPT = `You clean up terms for Wikipedia lookup. Rules:
 - Convert plural to singular (e.g., "curtains" -> "curtain")
@@ -78,31 +82,24 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			apiKey: openaiKey,
 		});
 
-		const { text } = await generateText({
+		const { object } = await generateObject({
 			model: openai(SMALL_MODEL),
+			schema: cleanTermsSchema,
 			system: SYSTEM_PROMPT,
-			messages: [
-				{
-					role: "user",
-					content: `Clean these terms: ${JSON.stringify(data.items)}`,
-				},
-			],
-			output: "json",
+			prompt: `Clean these terms: ${JSON.stringify(data.items)}`,
 		});
 
-		if (!text) {
+		if (!object || !object.items) {
 			return new Response(
 				JSON.stringify({ error: "No response from OpenAI" }),
 				{ status: 500, headers: { "Content-Type": "application/json" } },
 			);
 		}
 
-		const result = JSON.parse(text) as CleanTermsResponse;
-
 		return new Response(
 			JSON.stringify({
 				success: true,
-				data: result,
+				data: object,
 			}),
 			{
 				status: 200,
