@@ -38,6 +38,11 @@ button {
 	min-width: 200px;
 }
 
+button.settings-trigger,
+button.close-btn {
+	min-width: unset;
+}
+
 button:disabled {
 	background-color: #ccc;
 	cursor: not-allowed;
