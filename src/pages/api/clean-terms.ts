@@ -3,7 +3,6 @@
 
 import type { APIRoute } from "astro";
 import { generateObject } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
 import {
 	validateOrigin,
 	createCorsErrorResponse,
@@ -12,6 +11,7 @@ import {
 	createRateLimitErrorResponse,
 } from "../../lib/cors";
 import { SMALL_MODEL } from "../../lib/constants";
+import { extractUserKeys, getAIProviderInstance } from "../../lib/api-keys";
 import { stringItemsSchema } from "../../lib/schemas";
 
 interface CleanTermsRequest {
@@ -49,13 +49,26 @@ export const POST: APIRoute = async ({ request, locals }) => {
 	}
 
 	try {
-		const runtime = locals.runtime as { env?: { OPENAI_API_KEY?: string } };
-		const openaiKey =
+		const userKeys = extractUserKeys(request);
+		const runtime = locals.runtime as {
+			env?: { OPENROUTER_API_KEY?: string; OPENAI_API_KEY?: string };
+		};
+		const serverOpenRouterKey =
+			runtime?.env?.OPENROUTER_API_KEY || import.meta.env.OPENROUTER_API_KEY;
+		const serverOpenAIKey =
 			runtime?.env?.OPENAI_API_KEY || import.meta.env.OPENAI_API_KEY;
 
-		if (!openaiKey) {
+		const providerInstance = getAIProviderInstance(
+			userKeys,
+			serverOpenRouterKey,
+			serverOpenAIKey,
+		);
+
+		if (!providerInstance) {
 			return new Response(
-				JSON.stringify({ error: "OPENAI_API_KEY not configured" }),
+				JSON.stringify({
+					error: "No API keys configured (need OpenRouter or OpenAI)",
+				}),
 				{ status: 500, headers: { "Content-Type": "application/json" } },
 			);
 		}
@@ -70,13 +83,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			);
 		}
 
-		// Create OpenAI provider instance with API key
-		const openai = createOpenAI({
-			apiKey: openaiKey,
-		});
-
 		const { object } = await generateObject({
-			model: openai(SMALL_MODEL),
+			model: providerInstance.provider.chat(SMALL_MODEL),
 			schema: stringItemsSchema,
 			system: SYSTEM_PROMPT,
 			prompt: `Clean these terms: ${JSON.stringify(data.items)}`,

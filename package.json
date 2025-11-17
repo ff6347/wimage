@@ -12,8 +12,10 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "2.0.65",
+    "@openrouter/ai-sdk-provider": "1.2.3",
     "ai": "5.0.92",
     "astro": "5.15.5",
+    "moondream": "0.1.1",
     "openai": "6.8.1",
     "zod": "3.25.76"
   },

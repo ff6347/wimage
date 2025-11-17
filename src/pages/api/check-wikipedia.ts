@@ -2,7 +2,13 @@
 // ABOUTME: Accepts array of terms and queries Wikipedia MediaWiki API to check if articles exist
 
 import type { APIRoute } from "astro";
-import { validateOrigin, createCorsErrorResponse, checkRateLimit, getClientId, createRateLimitErrorResponse } from "../../lib/cors";
+import {
+	validateOrigin,
+	createCorsErrorResponse,
+	checkRateLimit,
+	getClientId,
+	createRateLimitErrorResponse,
+} from "../../lib/cors";
 
 interface WikipediaPage {
 	pageid?: number;
@@ -21,7 +27,8 @@ export const GET: APIRoute = async () => {
 	return new Response(
 		JSON.stringify({
 			endpoint: "/api/check-wikipedia",
-			description: "Checks if Wikipedia articles exist for given terms using the MediaWiki API. Queries the API with each term and returns URLs for articles that exist.",
+			description:
+				"Checks if Wikipedia articles exist for given terms using the MediaWiki API. Queries the API with each term and returns URLs for articles that exist.",
 			method: "POST",
 			apiUsed: "Wikipedia MediaWiki API (opensearch action)",
 		}),
@@ -53,18 +60,21 @@ export const POST: APIRoute = async ({ request }) => {
 		// Check each item against Wikipedia
 		const results: WikipediaCheckResult[] = await Promise.all(
 			items.map(async (item: string) => {
-				const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(item)}&format=json&origin=*`;
+				const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(item)}&format=json&redirects=1&origin=*`;
 
 				try {
 					const response = await fetch(url, {
 						headers: {
-							"User-Agent": "WikiImageApp/1.0 (https://wimage.pages.dev; educational project)",
-							"Accept": "application/json",
+							"User-Agent":
+								"WikiImageApp/1.0 (https://wimage.pages.dev; educational project)",
+							Accept: "application/json",
 						},
 					});
 
 					if (!response.ok) {
-						console.error(`Wikipedia API error for "${item}": ${response.status} ${response.statusText}`);
+						console.error(
+							`Wikipedia API error for "${item}": ${response.status} ${response.statusText}`,
+						);
 						const text = await response.text();
 						console.error(`Response text: ${text.substring(0, 200)}`);
 						return {
@@ -77,7 +87,9 @@ export const POST: APIRoute = async ({ request }) => {
 					const contentType = response.headers.get("content-type");
 					if (!contentType || !contentType.includes("application/json")) {
 						const text = await response.text();
-						console.error(`Non-JSON response for "${item}": ${text.substring(0, 200)}`);
+						console.error(
+							`Non-JSON response for "${item}": ${text.substring(0, 200)}`,
+						);
 						return {
 							term: item,
 							exists: false,
@@ -86,7 +98,10 @@ export const POST: APIRoute = async ({ request }) => {
 					}
 
 					const data = await response.json();
-					console.log(`Wikipedia response for "${item}":`, JSON.stringify(data, null, 2));
+					console.info(
+						`Wikipedia response for "${item}":`,
+						JSON.stringify(data, null, 2),
+					);
 
 					const pages = data.query?.pages;
 					if (!pages) {

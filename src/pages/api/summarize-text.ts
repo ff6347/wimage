@@ -100,7 +100,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 						// maxTokens: 1000,
 					});
 
-					console.log(
+					console.info(
 						`Completion response for "${article.title}":`,
 						text,
 					);

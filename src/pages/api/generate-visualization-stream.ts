@@ -3,7 +3,6 @@
 
 import type { APIRoute } from "astro";
 import { streamText } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
 import {
 	validateOrigin,
 	createCorsErrorResponse,
@@ -12,6 +11,7 @@ import {
 	createRateLimitErrorResponse,
 } from "../../lib/cors";
 import { LARGE_MODEL } from "../../lib/constants";
+import { extractUserKeys, getAIProviderInstance } from "../../lib/api-keys";
 
 interface Summary {
 	title: string;
@@ -80,28 +80,41 @@ export const GET: APIRoute = async () => {
 };
 
 export const POST: APIRoute = async ({ request, locals }) => {
-	console.log("=== POST /api/generate-visualization-stream called ===");
+	console.info("=== POST /api/generate-visualization-stream called ===");
 
 	if (!validateOrigin(request)) {
-		console.log("CORS validation failed");
+		console.warn("CORS validation failed");
 		return createCorsErrorResponse();
 	}
 
 	const clientId = getClientId(request);
 	if (!checkRateLimit(clientId)) {
-		console.log("Rate limit exceeded");
+		console.warn("Rate limit exceeded");
 		return createRateLimitErrorResponse();
 	}
 
-	console.log("Validation passed, processing request...");
+	console.info("Validation passed, processing request...");
 	try {
-		const runtime = locals.runtime as { env?: { OPENAI_API_KEY?: string } };
-		const openaiKey =
+		const userKeys = extractUserKeys(request);
+		const runtime = locals.runtime as {
+			env?: { OPENROUTER_API_KEY?: string; OPENAI_API_KEY?: string };
+		};
+		const serverOpenRouterKey =
+			runtime?.env?.OPENROUTER_API_KEY || import.meta.env.OPENROUTER_API_KEY;
+		const serverOpenAIKey =
 			runtime?.env?.OPENAI_API_KEY || import.meta.env.OPENAI_API_KEY;
 
-		if (!openaiKey) {
+		const providerInstance = getAIProviderInstance(
+			userKeys,
+			serverOpenRouterKey,
+			serverOpenAIKey,
+		);
+
+		if (!providerInstance) {
 			return new Response(
-				JSON.stringify({ error: "OPENAI_API_KEY not configured" }),
+				JSON.stringify({
+					error: "No API keys configured (need OpenRouter or OpenAI)",
+				}),
 				{ status: 500, headers: { "Content-Type": "application/json" } },
 			);
 		}
@@ -121,20 +134,15 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			.map((s) => `Title: ${s.title}\nSummary: ${s.summary}`)
 			.join("\n\n");
 
-		// Create OpenAI provider instance with API key
-		const openai = createOpenAI({
-			apiKey: openaiKey,
-		});
-
 		// Create the streaming text response
-		console.log(
+		console.info(
 			"Creating streaming visualization with summaries:",
 			summaries.length,
 		);
-		console.log("Formatted summaries:", formattedSummaries.substring(0, 200));
+		console.info("Formatted summaries:", formattedSummaries.substring(0, 200));
 
 		const result = streamText({
-			model: openai(LARGE_MODEL),
+			model: providerInstance.provider.chat(LARGE_MODEL),
 			system: SYSTEM_PROMPT,
 			messages: [
 				{
@@ -144,7 +152,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			],
 		});
 
-		console.log("Returning streaming response...");
+		console.info("Returning streaming response...");
 		// Return the streaming response
 		return result.toTextStreamResponse();
 	} catch (error) {

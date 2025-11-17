@@ -138,6 +138,8 @@ import "../styles/shared.css";
 		</style>
 
 		<script>
+			import { getApiHeaders } from "../lib/client-api-keys";
+
 			interface WikiArticle {
 				title: string;
 				text: string;
@@ -299,6 +301,7 @@ import "../styles/shared.css";
 
 				const response = await fetch("/api/analyze", {
 					method: "POST",
+					headers: getApiHeaders(),
 					body: formData,
 				});
 
@@ -318,7 +321,10 @@ import "../styles/shared.css";
 			): Promise<{ items: string[] }> {
 				const response = await fetch("/api/extract-json", {
 					method: "POST",
-					headers: { "Content-Type": "application/json" },
+					headers: {
+						"Content-Type": "application/json",
+						...getApiHeaders()
+					},
 					body: JSON.stringify({ result: moondreamResult }),
 				});
 
@@ -342,7 +348,10 @@ import "../styles/shared.css";
 
 				const response = await fetch("/api/clean-terms", {
 					method: "POST",
-					headers: { "Content-Type": "application/json" },
+					headers: {
+						"Content-Type": "application/json",
+						...getApiHeaders()
+					},
 					body: JSON.stringify({ items }),
 				});
 
@@ -360,7 +369,10 @@ import "../styles/shared.css";
 
 				const response = await fetch("/api/check-wikipedia", {
 					method: "POST",
-					headers: { "Content-Type": "application/json" },
+					headers: {
+						"Content-Type": "application/json",
+						...getApiHeaders()
+					},
 					body: JSON.stringify({ items }),
 				});
 
@@ -385,7 +397,10 @@ import "../styles/shared.css";
 			): Promise<WikiArticle[]> {
 				const response = await fetch("/api/fetch-wikipedia-text", {
 					method: "POST",
-					headers: { "Content-Type": "application/json" },
+					headers: {
+						"Content-Type": "application/json",
+						...getApiHeaders()
+					},
 					body: JSON.stringify({ urls }),
 				});
 
@@ -443,7 +458,10 @@ import "../styles/shared.css";
 			): Promise<string> {
 				const response = await fetch("/api/summarize-stream", {
 					method: "POST",
-					headers: { "Content-Type": "application/json" },
+					headers: {
+						"Content-Type": "application/json",
+						...getApiHeaders()
+					},
 					body: JSON.stringify({ article }),
 				});
 
@@ -488,7 +506,10 @@ import "../styles/shared.css";
 			): Promise<string> {
 				const response = await fetch("/api/generate-visualization-stream", {
 					method: "POST",
-					headers: { "Content-Type": "application/json" },
+					headers: {
+						"Content-Type": "application/json",
+						...getApiHeaders()
+					},
 					body: JSON.stringify({ summaries }),
 				});
 
