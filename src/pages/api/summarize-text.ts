@@ -99,7 +99,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 						// max_completion_tokens: 1000,
 					});
 
-					console.log(
+					console.info(
 						`Completion response for "${article.title}":`,
 						JSON.stringify(completion, null, 2),
 					);

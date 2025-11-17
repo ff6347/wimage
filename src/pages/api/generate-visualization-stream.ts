@@ -80,32 +80,42 @@ export const GET: APIRoute = async () => {
 };
 
 export const POST: APIRoute = async ({ request, locals }) => {
-	console.log("=== POST /api/generate-visualization-stream called ===");
+	console.info("=== POST /api/generate-visualization-stream called ===");
 
 	if (!validateOrigin(request)) {
-		console.log("CORS validation failed");
+		console.warn("CORS validation failed");
 		return createCorsErrorResponse();
 	}
 
 	const clientId = getClientId(request);
 	if (!checkRateLimit(clientId)) {
-		console.log("Rate limit exceeded");
+		console.warn("Rate limit exceeded");
 		return createRateLimitErrorResponse();
 	}
 
-	console.log("Validation passed, processing request...");
+	console.info("Validation passed, processing request...");
 	try {
 		const userKeys = extractUserKeys(request);
-		const runtime = locals.runtime as { env?: { OPENROUTER_API_KEY?: string; OPENAI_API_KEY?: string } };
-		const serverOpenRouterKey = runtime?.env?.OPENROUTER_API_KEY || import.meta.env.OPENROUTER_API_KEY;
-		const serverOpenAIKey = runtime?.env?.OPENAI_API_KEY || import.meta.env.OPENAI_API_KEY;
+		const runtime = locals.runtime as {
+			env?: { OPENROUTER_API_KEY?: string; OPENAI_API_KEY?: string };
+		};
+		const serverOpenRouterKey =
+			runtime?.env?.OPENROUTER_API_KEY || import.meta.env.OPENROUTER_API_KEY;
+		const serverOpenAIKey =
+			runtime?.env?.OPENAI_API_KEY || import.meta.env.OPENAI_API_KEY;
 
-		const providerInstance = getAIProviderInstance(userKeys, serverOpenRouterKey, serverOpenAIKey);
+		const providerInstance = getAIProviderInstance(
+			userKeys,
+			serverOpenRouterKey,
+			serverOpenAIKey,
+		);
 
 		if (!providerInstance) {
 			return new Response(
-				JSON.stringify({ error: "No API keys configured (need OpenRouter or OpenAI)" }),
-				{ status: 500, headers: { "Content-Type": "application/json" } }
+				JSON.stringify({
+					error: "No API keys configured (need OpenRouter or OpenAI)",
+				}),
+				{ status: 500, headers: { "Content-Type": "application/json" } },
 			);
 		}
 
@@ -125,11 +135,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			.join("\n\n");
 
 		// Create the streaming text response
-		console.log(
+		console.info(
 			"Creating streaming visualization with summaries:",
 			summaries.length,
 		);
-		console.log("Formatted summaries:", formattedSummaries.substring(0, 200));
+		console.info("Formatted summaries:", formattedSummaries.substring(0, 200));
 
 		const result = streamText({
 			model: providerInstance.provider.chat(LARGE_MODEL),
@@ -142,7 +152,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			],
 		});
 
-		console.log("Returning streaming response...");
+		console.info("Returning streaming response...");
 		// Return the streaming response
 		return result.toTextStreamResponse();
 	} catch (error) {
