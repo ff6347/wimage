@@ -1,4 +1,4 @@
-// ABOUTME: API route for cleaning extracted terms using OpenAI
+// ABOUTME: API route for cleaning extracted terms using OpenAI via Vercel AI SDK
 // ABOUTME: Converts plural to singular and reduces multi-word phrases to single best word for Wikipedia
 
 import type { APIRoute } from "astro";
@@ -10,15 +10,11 @@ import {
 	getClientId,
 	createRateLimitErrorResponse,
 } from "../../lib/cors";
-import { observationsSchema } from "../../lib/json-schema";
 import { SMALL_MODEL } from "../../lib/constants";
 import { extractUserKeys, getAIProviderInstance } from "../../lib/api-keys";
+import { stringItemsSchema } from "../../lib/schemas";
 
 interface CleanTermsRequest {
-	items: string[];
-}
-
-interface CleanTermsResponse {
 	items: string[];
 }
 
@@ -54,16 +50,26 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
 	try {
 		const userKeys = extractUserKeys(request);
-		const runtime = locals.runtime as { env?: { OPENROUTER_API_KEY?: string; OPENAI_API_KEY?: string } };
-		const serverOpenRouterKey = runtime?.env?.OPENROUTER_API_KEY || import.meta.env.OPENROUTER_API_KEY;
-		const serverOpenAIKey = runtime?.env?.OPENAI_API_KEY || import.meta.env.OPENAI_API_KEY;
+		const runtime = locals.runtime as {
+			env?: { OPENROUTER_API_KEY?: string; OPENAI_API_KEY?: string };
+		};
+		const serverOpenRouterKey =
+			runtime?.env?.OPENROUTER_API_KEY || import.meta.env.OPENROUTER_API_KEY;
+		const serverOpenAIKey =
+			runtime?.env?.OPENAI_API_KEY || import.meta.env.OPENAI_API_KEY;
 
-		const providerInstance = getAIProviderInstance(userKeys, serverOpenRouterKey, serverOpenAIKey);
+		const providerInstance = getAIProviderInstance(
+			userKeys,
+			serverOpenRouterKey,
+			serverOpenAIKey,
+		);
 
 		if (!providerInstance) {
 			return new Response(
-				JSON.stringify({ error: "No API keys configured (need OpenRouter or OpenAI)" }),
-				{ status: 500, headers: { "Content-Type": "application/json" } }
+				JSON.stringify({
+					error: "No API keys configured (need OpenRouter or OpenAI)",
+				}),
+				{ status: 500, headers: { "Content-Type": "application/json" } },
 			);
 		}
 
@@ -79,17 +85,22 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
 		const { object } = await generateObject({
 			model: providerInstance.provider.chat(SMALL_MODEL),
+			schema: stringItemsSchema,
 			system: SYSTEM_PROMPT,
 			prompt: `Clean these terms: ${JSON.stringify(data.items)}`,
-			schema: observationsSchema,
 		});
 
-		const result = object as CleanTermsResponse;
+		if (!object || !object.items) {
+			return new Response(
+				JSON.stringify({ error: "No response from OpenAI" }),
+				{ status: 500, headers: { "Content-Type": "application/json" } },
+			);
+		}
 
 		return new Response(
 			JSON.stringify({
 				success: true,
-				data: result,
+				data: object,
 			}),
 			{
 				status: 200,

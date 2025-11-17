@@ -1,4 +1,4 @@
-// ABOUTME: API route for extracting JSON from Moondream results using OpenAI
+// ABOUTME: API route for extracting JSON from Moondream results using OpenAI via Vercel AI SDK
 // ABOUTME: Accepts Moondream response text and uses GPT-5 Mini to parse it into structured JSON
 
 import type { APIRoute } from "astro";
@@ -10,9 +10,9 @@ import {
 	getClientId,
 	createRateLimitErrorResponse,
 } from "../../lib/cors";
-import { observationsSchema } from "../../lib/json-schema";
 import { SMALL_MODEL } from "../../lib/constants";
 import { extractUserKeys, getAIProviderInstance } from "../../lib/api-keys";
+import { stringItemsSchema } from "../../lib/schemas";
 
 const SYSTEM_PROMPT = `You are a JSON data extract tool. You get some text that should contain a JSON string. For example
 'Results:
@@ -46,16 +46,26 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
 	try {
 		const userKeys = extractUserKeys(request);
-		const runtime = locals.runtime as { env?: { OPENROUTER_API_KEY?: string; OPENAI_API_KEY?: string } };
-		const serverOpenRouterKey = runtime?.env?.OPENROUTER_API_KEY || import.meta.env.OPENROUTER_API_KEY;
-		const serverOpenAIKey = runtime?.env?.OPENAI_API_KEY || import.meta.env.OPENAI_API_KEY;
+		const runtime = locals.runtime as {
+			env?: { OPENROUTER_API_KEY?: string; OPENAI_API_KEY?: string };
+		};
+		const serverOpenRouterKey =
+			runtime?.env?.OPENROUTER_API_KEY || import.meta.env.OPENROUTER_API_KEY;
+		const serverOpenAIKey =
+			runtime?.env?.OPENAI_API_KEY || import.meta.env.OPENAI_API_KEY;
 
-		const providerInstance = getAIProviderInstance(userKeys, serverOpenRouterKey, serverOpenAIKey);
+		const providerInstance = getAIProviderInstance(
+			userKeys,
+			serverOpenRouterKey,
+			serverOpenAIKey,
+		);
 
 		if (!providerInstance) {
 			return new Response(
-				JSON.stringify({ error: "No API keys configured (need OpenRouter or OpenAI)" }),
-				{ status: 500, headers: { "Content-Type": "application/json" } }
+				JSON.stringify({
+					error: "No API keys configured (need OpenRouter or OpenAI)",
+				}),
+				{ status: 500, headers: { "Content-Type": "application/json" } },
 			);
 		}
 
@@ -71,17 +81,22 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
 		const { object } = await generateObject({
 			model: providerInstance.provider.chat(SMALL_MODEL),
+			schema: stringItemsSchema,
 			system: SYSTEM_PROMPT,
 			prompt: moondreamResult,
-			schema: observationsSchema,
 		});
 
-		const parsed = object;
+		if (!object || !object.items) {
+			return new Response(
+				JSON.stringify({ error: "No content extracted from OpenAI" }),
+				{ status: 500, headers: { "Content-Type": "application/json" } },
+			);
+		}
 
 		return new Response(
 			JSON.stringify({
 				success: true,
-				data: parsed,
+				data: object,
 				rawResult: moondreamResult,
 			}),
 			{

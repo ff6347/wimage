@@ -1,8 +1,9 @@
-// ABOUTME: API route for generating expressive spatial typography visualizations using OpenAI
-// ABOUTME: Accepts summaries and uses GPT-5-mini to create unique HTML/CSS for each visualization
+// ABOUTME: API route for generating expressive spatial typography visualizations using OpenAI via Vercel AI SDK
+// ABOUTME: Accepts summaries and uses GPT-5.1 to create unique HTML/CSS for each visualization
 
 import type { APIRoute } from "astro";
-import OpenAI from "openai";
+import { generateText } from "ai";
+import { createOpenAI } from "@ai-sdk/openai";
 import {
 	validateOrigin,
 	createCorsErrorResponse,
@@ -88,7 +89,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			);
 		}
 
-		const openai = new OpenAI({ apiKey: openaiKey });
+		// Create OpenAI provider instance with API key
+		const openai = createOpenAI({
+			apiKey: openaiKey,
+		});
 
 		const summariesText = summaries
 			.map((s: Summary) => `Title: ${s.title}\nSummary: ${s.summary}`)
@@ -99,23 +103,20 @@ Article Summaries:
 ${summariesText}
 Return ONLY the complete HTML code, no explanations or markdown formatting.`;
 
-		const completion = await openai.chat.completions.create({
-			model: LARGE_MODEL,
+		const { text } = await generateText({
+			model: openai(LARGE_MODEL),
+			system: SYSTEM_PROMPT,
 			messages: [
-				{
-					role: "system",
-					content: SYSTEM_PROMPT,
-				},
 				{
 					role: "user",
 					content: prompt,
 				},
 			],
 			// temperature: 1.2,
-			// max_completion_tokens: 4000,
+			// maxTokens: 4000,
 		});
 
-		let html = completion.choices[0]?.message?.content || "";
+		let html = text || "";
 
 		if (!html) {
 			return new Response(JSON.stringify({ error: "No HTML generated" }), {
