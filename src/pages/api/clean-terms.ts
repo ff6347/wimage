@@ -4,7 +4,6 @@
 import type { APIRoute } from "astro";
 import { generateObject } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
-import { z } from "zod";
 import {
 	validateOrigin,
 	createCorsErrorResponse,
@@ -13,17 +12,11 @@ import {
 	createRateLimitErrorResponse,
 } from "../../lib/cors";
 import { SMALL_MODEL } from "../../lib/constants";
+import { stringItemsSchema } from "../../lib/schemas";
 
 interface CleanTermsRequest {
 	items: string[];
 }
-
-// Zod schema for structured output validation
-const cleanTermsSchema = z.object({
-	items: z
-		.array(z.string())
-		.describe("Array of cleaned terms in singular form, maintaining input order"),
-});
 
 const SYSTEM_PROMPT = `You clean up terms for Wikipedia lookup. Rules:
 - Convert plural to singular (e.g., "curtains" -> "curtain")
@@ -84,7 +77,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
 		const { object } = await generateObject({
 			model: openai(SMALL_MODEL),
-			schema: cleanTermsSchema,
+			schema: stringItemsSchema,
 			system: SYSTEM_PROMPT,
 			prompt: `Clean these terms: ${JSON.stringify(data.items)}`,
 		});

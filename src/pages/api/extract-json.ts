@@ -4,7 +4,6 @@
 import type { APIRoute } from "astro";
 import { generateObject } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
-import { z } from "zod";
 import {
 	validateOrigin,
 	createCorsErrorResponse,
@@ -13,15 +12,7 @@ import {
 	createRateLimitErrorResponse,
 } from "../../lib/cors";
 import { SMALL_MODEL } from "../../lib/constants";
-
-// Zod schema for structured output validation matching original observationsSchema
-const extractJsonSchema = z.object({
-	items: z
-		.array(z.string())
-		.min(0)
-		.max(3)
-		.describe("Array of extracted observations from the image (0-3 items)"),
-});
+import { stringItemsSchema } from "../../lib/schemas";
 
 const SYSTEM_PROMPT = `You are a JSON data extract tool. You get some text that should contain a JSON string. For example
 'Results:
@@ -82,7 +73,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
 		const { object } = await generateObject({
 			model: openai(SMALL_MODEL),
-			schema: extractJsonSchema,
+			schema: stringItemsSchema,
 			system: SYSTEM_PROMPT,
 			prompt: moondreamResult,
 		});
