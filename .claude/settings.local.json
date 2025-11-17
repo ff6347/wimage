@@ -17,7 +17,8 @@
       "WebFetch(domain:ai-sdk.dev)",
       "Bash(node -e:*)",
       "Bash(open http://localhost:4321/demo)",
-      "Bash(open:*)"
+      "Bash(open:*)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []
