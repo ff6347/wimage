@@ -16,7 +16,8 @@
     "ai": "^5.0.92",
     "astro": "^5.15.5",
     "moondream": "0.1.1",
-    "openai": "6.8.1"
+    "openai": "6.8.1",
+    "zod": "3.25.76"
   },
   "devDependencies": {
     "@astrojs/cloudflare": "12.6.10",
