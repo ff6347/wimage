@@ -3,7 +3,6 @@
 
 import type { APIRoute } from "astro";
 import { streamText } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
 import {
 	validateOrigin,
 	createCorsErrorResponse,
@@ -12,7 +11,7 @@ import {
 	createRateLimitErrorResponse,
 } from "../../lib/cors";
 import { LARGE_MODEL } from "../../lib/constants";
-import { extractUserKeys, getAIProvider } from "../../lib/api-keys";
+import { extractUserKeys, getAIProviderInstance } from "../../lib/api-keys";
 
 interface StreamSummaryRequest {
 	title: string;
@@ -53,9 +52,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
 		const serverOpenRouterKey = runtime?.env?.OPENROUTER_API_KEY || import.meta.env.OPENROUTER_API_KEY;
 		const serverOpenAIKey = runtime?.env?.OPENAI_API_KEY || import.meta.env.OPENAI_API_KEY;
 
-		const providerInfo = getAIProvider(userKeys, serverOpenRouterKey, serverOpenAIKey);
+		const providerInstance = getAIProviderInstance(userKeys, serverOpenRouterKey, serverOpenAIKey);
 
-		if (!providerInfo) {
+		if (!providerInstance) {
 			return new Response(
 				JSON.stringify({ error: "No API keys configured (need OpenRouter or OpenAI)" }),
 				{ status: 500, headers: { "Content-Type": "application/json" } }
@@ -72,17 +71,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			);
 		}
 
-		// Create OpenAI provider instance with API key
-		const openai = createOpenAI({
-			apiKey: providerInfo.apiKey,
-			...(providerInfo.provider === 'openrouter' && {
-				baseURL: 'https://openrouter.ai/api/v1'
-			})
-		});
-
 		// Create the streaming text response
 		const result = streamText({
-			model: openai(LARGE_MODEL),
+			model: providerInstance.provider.chat(LARGE_MODEL),
 			system: SYSTEM_PROMPT,
 			messages: [
 				{
