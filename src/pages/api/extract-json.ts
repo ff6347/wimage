@@ -13,7 +13,6 @@ import {
 import { observationsSchema } from "../../lib/json-schema";
 import { SMALL_MODEL } from "../../lib/constants";
 import { extractUserKeys, getAIProvider } from "../../lib/api-keys";
-import { createOpenAI } from "@ai-sdk/openai";
 
 const SYSTEM_PROMPT = `You are a JSON data extract tool. You get some text that should contain a JSON string. For example
 'Results:
