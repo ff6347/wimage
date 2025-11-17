@@ -8,7 +8,7 @@
 
 		<div class="modal-body">
 			<p class="intro-text">
-				Configure your API keys to use WImage. You'll need keys from the following providers:
+				Configure your API keys to use WImage. You'll need a Moondream key and either OpenRouter or OpenAI (or both):
 			</p>
 
 			<div class="api-key-section">
@@ -356,7 +356,7 @@
 
 	// Check if all required keys are present
 	function hasAllKeys(keys: APIKeys): boolean {
-		return !!(keys.openrouter && keys.moondream && keys.openai);
+		return !!(keys.moondream && (keys.openrouter || keys.openai));
 	}
 
 	// Validate API key format (basic validation)
@@ -435,22 +435,34 @@
 		// Validate each key
 		let hasErrors = false;
 
-		const openrouterValidation = validateKeyFormat(keys.openrouter || '', 'openrouter');
-		if (openrouterValidation) {
-			showFieldError('openrouter', openrouterValidation);
-			hasErrors = true;
-		}
-
+		// Moondream is always required
 		const moondreamValidation = validateKeyFormat(keys.moondream || '', 'moondream');
 		if (moondreamValidation) {
 			showFieldError('moondream', moondreamValidation);
 			hasErrors = true;
 		}
 
-		const openaiValidation = validateKeyFormat(keys.openai || '', 'openai');
-		if (openaiValidation) {
-			showFieldError('openai', openaiValidation);
+		// At least one of OpenRouter or OpenAI is required
+		if (!keys.openrouter && !keys.openai) {
+			showGlobalError('Please provide at least one API key: OpenRouter or OpenAI');
 			hasErrors = true;
+		}
+
+		// Only validate individual fields if they have values
+		if (keys.openrouter) {
+			const openrouterValidation = validateKeyFormat(keys.openrouter, 'openrouter');
+			if (openrouterValidation) {
+				showFieldError('openrouter', openrouterValidation);
+				hasErrors = true;
+			}
+		}
+
+		if (keys.openai) {
+			const openaiValidation = validateKeyFormat(keys.openai, 'openai');
+			if (openaiValidation) {
+				showFieldError('openai', openaiValidation);
+				hasErrors = true;
+			}
 		}
 
 		if (hasErrors) {
