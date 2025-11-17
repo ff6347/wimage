@@ -3,6 +3,7 @@
 
 import type { APIRoute } from "astro";
 import { validateOrigin, createCorsErrorResponse, checkRateLimit, getClientId, createRateLimitErrorResponse } from "../../lib/cors";
+import { extractUserKeys, getApiKey } from "../../lib/api-keys";
 
 const QUERY_PROMPT = 'write a description of what you see. Point out exactly three things in one word. I only want JSON output. Don\'t add any newlines make it as compact as possible. Make it an array ```ts type result:string[] = ["item 1", "item 2", "item 3"] ```';
 
@@ -33,7 +34,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
 		// Access environment variables from runtime (Cloudflare Workers)
 		const runtime = locals.runtime as { env?: { MOONDREAM_API_KEY?: string } };
-		const apiKey = runtime?.env?.MOONDREAM_API_KEY || import.meta.env.MOONDREAM_API_KEY;
+		const userKeys = extractUserKeys(request);
+		const serverKey = runtime?.env?.MOONDREAM_API_KEY || import.meta.env.MOONDREAM_API_KEY;
+		const apiKey = getApiKey(userKeys.moondream, serverKey, 'Moondream');
 
 		if (!apiKey) {
 			console.error("MOONDREAM_API_KEY not configured");
