@@ -21,7 +21,7 @@
 				<input
 					type="password"
 					id="openrouterKey"
-					placeholder="sk-or-v1-..."
+					placeholder="Enter your OpenRouter API key"
 					autocomplete="off"
 				/>
 				<div class="error-message" id="openrouterError"></div>
@@ -37,7 +37,7 @@
 				<input
 					type="password"
 					id="moondreamKey"
-					placeholder="md-..."
+					placeholder="Enter your Moondream API key"
 					autocomplete="off"
 				/>
 				<div class="error-message" id="moondreamError"></div>
@@ -53,7 +53,7 @@
 				<input
 					type="password"
 					id="openaiKey"
-					placeholder="sk-..."
+					placeholder="Enter your OpenAI API key"
 					autocomplete="off"
 				/>
 				<div class="error-message" id="openaiError"></div>
@@ -366,24 +366,6 @@
 		}
 
 		const trimmedKey = key.trim();
-
-		switch (provider) {
-			case 'openrouter':
-				if (!trimmedKey.startsWith('sk-or-')) {
-					return 'OpenRouter keys should start with "sk-or-"';
-				}
-				break;
-			case 'moondream':
-				if (!trimmedKey.startsWith('md-')) {
-					return 'Moondream keys should start with "md-"';
-				}
-				break;
-			case 'openai':
-				if (!trimmedKey.startsWith('sk-')) {
-					return 'OpenAI keys should start with "sk-"';
-				}
-				break;
-		}
 
 		if (trimmedKey.length < 20) {
 			return 'API key seems too short';
