@@ -1,8 +1,9 @@
-// ABOUTME: API route for extracting JSON from Moondream results using OpenAI
+// ABOUTME: API route for extracting JSON from Moondream results using OpenAI via Vercel AI SDK
 // ABOUTME: Accepts Moondream response text and uses GPT-5 Mini to parse it into structured JSON
 
 import type { APIRoute } from "astro";
-import OpenAI from "openai";
+import { generateObject } from "ai";
+import { createOpenAI } from "@ai-sdk/openai";
 import {
 	validateOrigin,
 	createCorsErrorResponse,
@@ -10,8 +11,8 @@ import {
 	getClientId,
 	createRateLimitErrorResponse,
 } from "../../lib/cors";
-import { observationsSchema } from "../../lib/json-schema";
 import { SMALL_MODEL } from "../../lib/constants";
+import { stringItemsSchema } from "../../lib/schemas";
 
 const SYSTEM_PROMPT = `You are a JSON data extract tool. You get some text that should contain a JSON string. For example
 'Results:
@@ -65,38 +66,29 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			);
 		}
 
-		const openai = new OpenAI({ apiKey: openaiKey });
-
-		const completion = await openai.chat.completions.create({
-			model: SMALL_MODEL,
-			messages: [
-				{
-					role: "system",
-					content: SYSTEM_PROMPT,
-				},
-				{
-					role: "user",
-					content: moondreamResult,
-				},
-			],
-			response_format: observationsSchema,
+		// Create OpenAI provider instance with API key
+		const openai = createOpenAI({
+			apiKey: openaiKey,
 		});
 
-		const extractedContent = completion.choices[0]?.message?.content;
+		const { object } = await generateObject({
+			model: openai(SMALL_MODEL),
+			schema: stringItemsSchema,
+			system: SYSTEM_PROMPT,
+			prompt: moondreamResult,
+		});
 
-		if (!extractedContent) {
+		if (!object || !object.items) {
 			return new Response(
 				JSON.stringify({ error: "No content extracted from OpenAI" }),
 				{ status: 500, headers: { "Content-Type": "application/json" } },
 			);
 		}
 
-		const parsed = JSON.parse(extractedContent);
-
 		return new Response(
 			JSON.stringify({
 				success: true,
-				data: parsed,
+				data: object,
 				rawResult: moondreamResult,
 			}),
 			{

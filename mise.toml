@@ -1,0 +1,8 @@
+[tools]
+node = "24"
+
+[tasks.dev]
+run = "npm run dev"
+
+[tasks.install]
+run = "npm ci"

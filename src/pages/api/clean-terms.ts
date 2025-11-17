@@ -1,8 +1,9 @@
-// ABOUTME: API route for cleaning extracted terms using OpenAI
+// ABOUTME: API route for cleaning extracted terms using OpenAI via Vercel AI SDK
 // ABOUTME: Converts plural to singular and reduces multi-word phrases to single best word for Wikipedia
 
 import type { APIRoute } from "astro";
-import OpenAI from "openai";
+import { generateObject } from "ai";
+import { createOpenAI } from "@ai-sdk/openai";
 import {
 	validateOrigin,
 	createCorsErrorResponse,
@@ -10,14 +11,10 @@ import {
 	getClientId,
 	createRateLimitErrorResponse,
 } from "../../lib/cors";
-import { observationsSchema } from "../../lib/json-schema";
 import { SMALL_MODEL } from "../../lib/constants";
+import { stringItemsSchema } from "../../lib/schemas";
 
 interface CleanTermsRequest {
-	items: string[];
-}
-
-interface CleanTermsResponse {
 	items: string[];
 }
 
@@ -73,37 +70,29 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			);
 		}
 
-		const openai = new OpenAI({ apiKey: openaiKey });
-
-		const completion = await openai.chat.completions.create({
-			model: SMALL_MODEL,
-			messages: [
-				{
-					role: "system",
-					content: SYSTEM_PROMPT,
-				},
-				{
-					role: "user",
-					content: `Clean these terms: ${JSON.stringify(data.items)}`,
-				},
-			],
-			response_format: observationsSchema,
+		// Create OpenAI provider instance with API key
+		const openai = createOpenAI({
+			apiKey: openaiKey,
 		});
 
-		const resultText = completion.choices[0]?.message?.content;
-		if (!resultText) {
+		const { object } = await generateObject({
+			model: openai(SMALL_MODEL),
+			schema: stringItemsSchema,
+			system: SYSTEM_PROMPT,
+			prompt: `Clean these terms: ${JSON.stringify(data.items)}`,
+		});
+
+		if (!object || !object.items) {
 			return new Response(
 				JSON.stringify({ error: "No response from OpenAI" }),
 				{ status: 500, headers: { "Content-Type": "application/json" } },
 			);
 		}
 
-		const result = JSON.parse(resultText) as CleanTermsResponse;
-
 		return new Response(
 			JSON.stringify({
 				success: true,
-				data: result,
+				data: object,
 			}),
 			{
 				status: 200,
