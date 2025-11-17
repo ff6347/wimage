@@ -1,8 +1,8 @@
 // ABOUTME: Manages API keys with priority: user-provided keys (from request headers) > server-side keys (from environment)
 // ABOUTME: Provides utilities to extract user keys from requests and select appropriate keys for API calls
 
-import { createOpenRouter } from '@openrouter/ai-sdk-provider';
-import { createOpenAI } from '@ai-sdk/openai';
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+import { createOpenAI } from "@ai-sdk/openai";
 
 export interface ApiKeys {
 	moondream: string | undefined;
@@ -66,30 +66,36 @@ export function getApiKey(
 export function getAIProviderInstance(
 	userKeys: ApiKeys,
 	serverOpenRouterKey: string | undefined,
-	serverOpenAIKey: string | undefined
+	serverOpenAIKey: string | undefined,
 ): { provider: any; providerName: string } | null {
 	// Try OpenRouter first (user key, then server key)
-	const openrouterKey = getApiKey(userKeys.openrouter, serverOpenRouterKey, 'OpenRouter');
+	const openrouterKey = getApiKey(
+		userKeys.openrouter,
+		serverOpenRouterKey,
+		"OpenRouter",
+	);
 	if (openrouterKey) {
-		console.log(`[API Keys] Selected provider: OpenRouter`);
+		console.info(`[API Keys] Selected provider: OpenRouter`);
 		return {
 			provider: createOpenRouter({ apiKey: openrouterKey }),
-			providerName: 'openrouter'
+			providerName: "openrouter",
 		};
 	}
 
 	// Fall back to OpenAI (user key, then server key)
-	const openaiKey = getApiKey(userKeys.openai, serverOpenAIKey, 'OpenAI');
+	const openaiKey = getApiKey(userKeys.openai, serverOpenAIKey, "OpenAI");
 	if (openaiKey) {
-		console.log(`[API Keys] Selected provider: OpenAI (OpenRouter not available)`);
+		console.info(
+			`[API Keys] Selected provider: OpenAI (OpenRouter not available)`,
+		);
 		return {
 			provider: createOpenAI({ apiKey: openaiKey }),
-			providerName: 'openai'
+			providerName: "openai",
 		};
 	}
 
 	// If neither available, return null
-	console.log('[API Keys] No OpenRouter or OpenAI key available');
+	console.info("[API Keys] No OpenRouter or OpenAI key available");
 	return null;
 }
 
