@@ -492,7 +492,7 @@
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
-					...getApiHeaders()
+					...getApiHeaders(),
 				},
 				body: JSON.stringify({ result: moondreamResult }),
 			});
@@ -545,7 +545,7 @@
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
-					...getApiHeaders()
+					...getApiHeaders(),
 				},
 				body: JSON.stringify({ items }),
 			});
@@ -596,7 +596,7 @@
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
-					...getApiHeaders()
+					...getApiHeaders(),
 				},
 				body: JSON.stringify({ items }),
 			});
@@ -653,7 +653,7 @@
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
-					...getApiHeaders()
+					...getApiHeaders(),
 				},
 				body: JSON.stringify({ urls: wikipediaUrls }),
 			});
@@ -780,7 +780,7 @@
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
-				...getApiHeaders()
+				...getApiHeaders(),
 			},
 			body: JSON.stringify({ article }),
 		});
@@ -834,12 +834,12 @@
 		visualizeTextBtn.disabled = true;
 
 		try {
-			console.log("Starting streaming visualization...");
+			console.info("Starting streaming visualization...");
 			const response = await fetch("/api/generate-visualization-stream", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
-					...getApiHeaders()
+					...getApiHeaders(),
 				},
 				body: JSON.stringify({ summaries }),
 			});
@@ -909,7 +909,7 @@
 				}, 100);
 			}
 
-			console.log("Streaming visualization complete");
+			console.info("Streaming visualization complete");
 		} catch (error) {
 			console.error("Visualization error:", error);
 			iframeContainer.innerHTML = `<p style="color: #d32f2f;">Error: ${error instanceof Error ? error.message : "Unknown error"}</p>`;

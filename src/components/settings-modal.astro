@@ -3,19 +3,26 @@
 	<div class="modal-content">
 		<div class="modal-header">
 			<h2>API Settings</h2>
-			<button id="closeModal" class="close-btn" aria-label="Close settings">&times;</button>
+			<button id="closeModal" class="close-btn" aria-label="Close settings"
+				>&times;</button
+			>
 		</div>
 
 		<div class="modal-body">
 			<p class="intro-text">
-				Configure your API keys to use WImage. You'll need a Moondream key and either OpenRouter or OpenAI (or both):
+				Configure your API keys to use WImage. You'll need a Moondream key and
+				either OpenRouter or OpenAI (or both):
 			</p>
 
 			<div class="api-key-section">
 				<label for="openrouterKey">
 					<strong>OpenRouter API Key</strong>
 					<span class="help-text">
-						Get your key at <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer">openrouter.ai/keys</a>
+						Get your key at <a
+							href="https://openrouter.ai/keys"
+							target="_blank"
+							rel="noopener noreferrer">openrouter.ai/keys</a
+						>
 					</span>
 				</label>
 				<input
@@ -31,7 +38,11 @@
 				<label for="moondreamKey">
 					<strong>Moondream API Key</strong>
 					<span class="help-text">
-						Get your free key at <a href="https://console.moondream.ai/" target="_blank" rel="noopener noreferrer">console.moondream.ai</a> (5,000 free requests/day)
+						Get your free key at <a
+							href="https://console.moondream.ai/"
+							target="_blank"
+							rel="noopener noreferrer">console.moondream.ai</a
+						> (5,000 free requests/day)
 					</span>
 				</label>
 				<input
@@ -47,7 +58,11 @@
 				<label for="openaiKey">
 					<strong>OpenAI API Key</strong>
 					<span class="help-text">
-						Get your key at <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">platform.openai.com/api-keys</a>
+						Get your key at <a
+							href="https://platform.openai.com/api-keys"
+							target="_blank"
+							rel="noopener noreferrer">platform.openai.com/api-keys</a
+						>
 					</span>
 				</label>
 				<input
@@ -188,6 +203,7 @@
 		width: 100%;
 		padding: 12px;
 		border: 1px solid #ddd;
+
 		font-size: 14px;
 		font-family: monospace;
 		transition: border-color 0.2s;
@@ -221,6 +237,7 @@
 		background-color: #1976d2;
 		color: white;
 		border: none;
+
 		font-size: 16px;
 		font-weight: 500;
 		cursor: pointer;
@@ -240,6 +257,7 @@
 		background-color: #f5f5f5;
 		color: #666;
 		border: 1px solid #ddd;
+
 		font-size: 16px;
 		cursor: pointer;
 		transition: background-color 0.2s;
@@ -254,6 +272,7 @@
 		padding: 12px;
 		background-color: #ffebee;
 		color: #c62828;
+
 		font-size: 14px;
 		display: none;
 	}
@@ -267,6 +286,8 @@
 		position: fixed;
 		top: 1%;
 		right: 1%;
+		/*width: 40px;*/
+		/*border-radius: 50%;*/
 		background-color: #1976d2;
 		color: white;
 		border: none;
@@ -289,8 +310,12 @@
 	}
 </style>
 
-<button class="settings-trigger" id="openSettingsBtn" aria-label="Open settings">
-	⚙️
+<button
+	class="settings-trigger"
+	id="openSettingsBtn"
+	aria-label="Open settings"
+>
+	Settings
 </button>
 
 <script>
@@ -306,23 +331,35 @@
 		openai: boolean;
 	}
 
-	const STORAGE_KEY = 'wimage_api_keys';
+	const STORAGE_KEY = "wimage_api_keys";
 
 	// DOM elements
-	const modal = document.getElementById('settingsModal') as HTMLElement;
-	const openBtn = document.getElementById('openSettingsBtn') as HTMLButtonElement;
-	const closeBtn = document.getElementById('closeModal') as HTMLButtonElement;
-	const saveBtn = document.getElementById('saveSettings') as HTMLButtonElement;
-	const clearBtn = document.getElementById('clearSettings') as HTMLButtonElement;
+	const modal = document.getElementById("settingsModal") as HTMLElement;
+	const openBtn = document.getElementById(
+		"openSettingsBtn",
+	) as HTMLButtonElement;
+	const closeBtn = document.getElementById("closeModal") as HTMLButtonElement;
+	const saveBtn = document.getElementById("saveSettings") as HTMLButtonElement;
+	const clearBtn = document.getElementById(
+		"clearSettings",
+	) as HTMLButtonElement;
 
-	const openrouterInput = document.getElementById('openrouterKey') as HTMLInputElement;
-	const moondreamInput = document.getElementById('moondreamKey') as HTMLInputElement;
-	const openaiInput = document.getElementById('openaiKey') as HTMLInputElement;
+	const openrouterInput = document.getElementById(
+		"openrouterKey",
+	) as HTMLInputElement;
+	const moondreamInput = document.getElementById(
+		"moondreamKey",
+	) as HTMLInputElement;
+	const openaiInput = document.getElementById("openaiKey") as HTMLInputElement;
 
-	const openrouterError = document.getElementById('openrouterError') as HTMLElement;
-	const moondreamError = document.getElementById('moondreamError') as HTMLElement;
-	const openaiError = document.getElementById('openaiError') as HTMLElement;
-	const globalError = document.getElementById('globalError') as HTMLElement;
+	const openrouterError = document.getElementById(
+		"openrouterError",
+	) as HTMLElement;
+	const moondreamError = document.getElementById(
+		"moondreamError",
+	) as HTMLElement;
+	const openaiError = document.getElementById("openaiError") as HTMLElement;
+	const globalError = document.getElementById("globalError") as HTMLElement;
 
 	// Load saved keys from localStorage
 	function loadKeys(): APIKeys {
@@ -330,7 +367,7 @@
 			const saved = localStorage.getItem(STORAGE_KEY);
 			return saved ? JSON.parse(saved) : {};
 		} catch (error) {
-			console.error('Error loading API keys:', error);
+			console.error("Error loading API keys:", error);
 			return {};
 		}
 	}
@@ -340,8 +377,10 @@
 		try {
 			localStorage.setItem(STORAGE_KEY, JSON.stringify(keys));
 		} catch (error) {
-			console.error('Error saving API keys:', error);
-			showGlobalError('Failed to save API keys. Please check your browser settings.');
+			console.error("Error saving API keys:", error);
+			showGlobalError(
+				"Failed to save API keys. Please check your browser settings.",
+			);
 		}
 	}
 
@@ -351,15 +390,18 @@
 	}
 
 	// Validate API key format (basic validation)
-	function validateKeyFormat(key: string, provider: 'openrouter' | 'moondream' | 'openai'): string | null {
-		if (!key || key.trim() === '') {
-			return 'API key is required';
+	function validateKeyFormat(
+		key: string,
+		provider: "openrouter" | "moondream" | "openai",
+	): string | null {
+		if (!key || key.trim() === "") {
+			return "API key is required";
 		}
 
 		const trimmedKey = key.trim();
 
 		if (trimmedKey.length < 20) {
-			return 'API key seems too short';
+			return "API key seems too short";
 		}
 
 		return null;
@@ -367,50 +409,53 @@
 
 	// Clear all error messages
 	function clearErrors(): void {
-		openrouterError.textContent = '';
-		moondreamError.textContent = '';
-		openaiError.textContent = '';
-		globalError.textContent = '';
-		globalError.classList.remove('visible');
+		openrouterError.textContent = "";
+		moondreamError.textContent = "";
+		openaiError.textContent = "";
+		globalError.textContent = "";
+		globalError.classList.remove("visible");
 
-		openrouterInput.classList.remove('error');
-		moondreamInput.classList.remove('error');
-		openaiInput.classList.remove('error');
+		openrouterInput.classList.remove("error");
+		moondreamInput.classList.remove("error");
+		openaiInput.classList.remove("error");
 	}
 
 	// Show error for specific field
-	function showFieldError(field: 'openrouter' | 'moondream' | 'openai', message: string): void {
+	function showFieldError(
+		field: "openrouter" | "moondream" | "openai",
+		message: string,
+	): void {
 		const errorElements = {
 			openrouter: { error: openrouterError, input: openrouterInput },
 			moondream: { error: moondreamError, input: moondreamInput },
-			openai: { error: openaiError, input: openaiInput }
+			openai: { error: openaiError, input: openaiInput },
 		};
 
 		const { error, input } = errorElements[field];
 		error.textContent = message;
-		input.classList.add('error');
+		input.classList.add("error");
 	}
 
 	// Show global error
 	function showGlobalError(message: string): void {
 		globalError.textContent = message;
-		globalError.classList.add('visible');
+		globalError.classList.add("visible");
 	}
 
 	// Open modal
 	function openModal(): void {
-		modal.classList.add('visible');
+		modal.classList.add("visible");
 		// Load current keys into inputs
 		const keys = loadKeys();
-		openrouterInput.value = keys.openrouter || '';
-		moondreamInput.value = keys.moondream || '';
-		openaiInput.value = keys.openai || '';
+		openrouterInput.value = keys.openrouter || "";
+		moondreamInput.value = keys.moondream || "";
+		openaiInput.value = keys.openai || "";
 		clearErrors();
 	}
 
 	// Close modal
 	function closeModal(): void {
-		modal.classList.remove('visible');
+		modal.classList.remove("visible");
 	}
 
 	// Save settings
@@ -420,38 +465,46 @@
 		const keys: APIKeys = {
 			openrouter: openrouterInput.value.trim(),
 			moondream: moondreamInput.value.trim(),
-			openai: openaiInput.value.trim()
+			openai: openaiInput.value.trim(),
 		};
 
 		// Validate each key
 		let hasErrors = false;
 
 		// Moondream is always required
-		const moondreamValidation = validateKeyFormat(keys.moondream || '', 'moondream');
+		const moondreamValidation = validateKeyFormat(
+			keys.moondream || "",
+			"moondream",
+		);
 		if (moondreamValidation) {
-			showFieldError('moondream', moondreamValidation);
+			showFieldError("moondream", moondreamValidation);
 			hasErrors = true;
 		}
 
 		// At least one of OpenRouter or OpenAI is required
 		if (!keys.openrouter && !keys.openai) {
-			showGlobalError('Please provide at least one API key: OpenRouter or OpenAI');
+			showGlobalError(
+				"Please provide at least one API key: OpenRouter or OpenAI",
+			);
 			hasErrors = true;
 		}
 
 		// Only validate individual fields if they have values
 		if (keys.openrouter) {
-			const openrouterValidation = validateKeyFormat(keys.openrouter, 'openrouter');
+			const openrouterValidation = validateKeyFormat(
+				keys.openrouter,
+				"openrouter",
+			);
 			if (openrouterValidation) {
-				showFieldError('openrouter', openrouterValidation);
+				showFieldError("openrouter", openrouterValidation);
 				hasErrors = true;
 			}
 		}
 
 		if (keys.openai) {
-			const openaiValidation = validateKeyFormat(keys.openai, 'openai');
+			const openaiValidation = validateKeyFormat(keys.openai, "openai");
 			if (openaiValidation) {
-				showFieldError('openai', openaiValidation);
+				showFieldError("openai", openaiValidation);
 				hasErrors = true;
 			}
 		}
@@ -464,23 +517,23 @@
 		saveKeys(keys);
 
 		// Show success feedback
-		saveBtn.textContent = '✓ Saved!';
-		saveBtn.style.backgroundColor = '#4caf50';
+		saveBtn.textContent = "✓ Saved!";
+		saveBtn.style.backgroundColor = "#4caf50";
 
 		setTimeout(() => {
-			saveBtn.textContent = 'Save Settings';
-			saveBtn.style.backgroundColor = '';
+			saveBtn.textContent = "Save Settings";
+			saveBtn.style.backgroundColor = "";
 			closeModal();
 		}, 1000);
 	}
 
 	// Clear all settings
 	function clearAllSettings(): void {
-		if (confirm('Are you sure you want to clear all API keys?')) {
+		if (confirm("Are you sure you want to clear all API keys?")) {
 			localStorage.removeItem(STORAGE_KEY);
-			openrouterInput.value = '';
-			moondreamInput.value = '';
-			openaiInput.value = '';
+			openrouterInput.value = "";
+			moondreamInput.value = "";
+			openaiInput.value = "";
 			clearErrors();
 		}
 	}
@@ -499,21 +552,21 @@
 	}
 
 	// Event listeners
-	openBtn.addEventListener('click', openModal);
-	closeBtn.addEventListener('click', closeModal);
-	saveBtn.addEventListener('click', saveSettings);
-	clearBtn.addEventListener('click', clearAllSettings);
+	openBtn.addEventListener("click", openModal);
+	closeBtn.addEventListener("click", closeModal);
+	saveBtn.addEventListener("click", saveSettings);
+	clearBtn.addEventListener("click", clearAllSettings);
 
 	// Close modal when clicking outside
-	modal.addEventListener('click', (e) => {
+	modal.addEventListener("click", (e) => {
 		if (e.target === modal) {
 			closeModal();
 		}
 	});
 
 	// Close modal with Escape key
-	document.addEventListener('keydown', (e) => {
-		if (e.key === 'Escape' && modal.classList.contains('visible')) {
+	document.addEventListener("keydown", (e) => {
+		if (e.key === "Escape" && modal.classList.contains("visible")) {
 			closeModal();
 		}
 	});
@@ -525,6 +578,6 @@
 	(window as any).apiSettings = {
 		getKeys: loadKeys,
 		hasAllKeys: () => hasAllKeys(loadKeys()),
-		openModal
+		openModal,
 	};
 </script>
