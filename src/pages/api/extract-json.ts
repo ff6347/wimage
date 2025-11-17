@@ -2,7 +2,7 @@
 // ABOUTME: Accepts Moondream response text and uses GPT-5 Mini to parse it into structured JSON
 
 import type { APIRoute } from "astro";
-import OpenAI from "openai";
+import { generateObject } from "ai";
 import {
 	validateOrigin,
 	createCorsErrorResponse,
@@ -12,7 +12,7 @@ import {
 } from "../../lib/cors";
 import { observationsSchema } from "../../lib/json-schema";
 import { SMALL_MODEL } from "../../lib/constants";
-import { extractUserKeys, getAIProvider } from "../../lib/api-keys";
+import { extractUserKeys, getAIProviderInstance } from "../../lib/api-keys";
 
 const SYSTEM_PROMPT = `You are a JSON data extract tool. You get some text that should contain a JSON string. For example
 'Results:
@@ -50,9 +50,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
 		const serverOpenRouterKey = runtime?.env?.OPENROUTER_API_KEY || import.meta.env.OPENROUTER_API_KEY;
 		const serverOpenAIKey = runtime?.env?.OPENAI_API_KEY || import.meta.env.OPENAI_API_KEY;
 
-		const providerInfo = getAIProvider(userKeys, serverOpenRouterKey, serverOpenAIKey);
+		const providerInstance = getAIProviderInstance(userKeys, serverOpenRouterKey, serverOpenAIKey);
 
-		if (!providerInfo) {
+		if (!providerInstance) {
 			return new Response(
 				JSON.stringify({ error: "No API keys configured (need OpenRouter or OpenAI)" }),
 				{ status: 500, headers: { "Content-Type": "application/json" } }
@@ -69,38 +69,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			);
 		}
 
-		const openai = new OpenAI({
-			apiKey: providerInfo.apiKey,
-			...(providerInfo.provider === 'openrouter' && {
-				baseURL: 'https://openrouter.ai/api/v1'
-			})
+		const { object } = await generateObject({
+			model: providerInstance.provider.chat(SMALL_MODEL),
+			system: SYSTEM_PROMPT,
+			prompt: moondreamResult,
+			schema: observationsSchema,
 		});
 
-		const completion = await openai.chat.completions.create({
-			model: SMALL_MODEL,
-			messages: [
-				{
-					role: "system",
-					content: SYSTEM_PROMPT,
-				},
-				{
-					role: "user",
-					content: moondreamResult,
-				},
-			],
-			response_format: observationsSchema,
-		});
-
-		const extractedContent = completion.choices[0]?.message?.content;
-
-		if (!extractedContent) {
-			return new Response(
-				JSON.stringify({ error: "No content extracted from OpenAI" }),
-				{ status: 500, headers: { "Content-Type": "application/json" } },
-			);
-		}
-
-		const parsed = JSON.parse(extractedContent);
+		const parsed = object;
 
 		return new Response(
 			JSON.stringify({

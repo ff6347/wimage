@@ -2,7 +2,7 @@
 // ABOUTME: Converts plural to singular and reduces multi-word phrases to single best word for Wikipedia
 
 import type { APIRoute } from "astro";
-import OpenAI from "openai";
+import { generateObject } from "ai";
 import {
 	validateOrigin,
 	createCorsErrorResponse,
@@ -12,7 +12,7 @@ import {
 } from "../../lib/cors";
 import { observationsSchema } from "../../lib/json-schema";
 import { SMALL_MODEL } from "../../lib/constants";
-import { extractUserKeys, getAIProvider } from "../../lib/api-keys";
+import { extractUserKeys, getAIProviderInstance } from "../../lib/api-keys";
 
 interface CleanTermsRequest {
 	items: string[];
@@ -58,9 +58,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
 		const serverOpenRouterKey = runtime?.env?.OPENROUTER_API_KEY || import.meta.env.OPENROUTER_API_KEY;
 		const serverOpenAIKey = runtime?.env?.OPENAI_API_KEY || import.meta.env.OPENAI_API_KEY;
 
-		const providerInfo = getAIProvider(userKeys, serverOpenRouterKey, serverOpenAIKey);
+		const providerInstance = getAIProviderInstance(userKeys, serverOpenRouterKey, serverOpenAIKey);
 
-		if (!providerInfo) {
+		if (!providerInstance) {
 			return new Response(
 				JSON.stringify({ error: "No API keys configured (need OpenRouter or OpenAI)" }),
 				{ status: 500, headers: { "Content-Type": "application/json" } }
@@ -77,37 +77,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
 			);
 		}
 
-		const openai = new OpenAI({
-			apiKey: providerInfo.apiKey,
-			...(providerInfo.provider === 'openrouter' && {
-				baseURL: 'https://openrouter.ai/api/v1'
-			})
+		const { object } = await generateObject({
+			model: providerInstance.provider.chat(SMALL_MODEL),
+			system: SYSTEM_PROMPT,
+			prompt: `Clean these terms: ${JSON.stringify(data.items)}`,
+			schema: observationsSchema,
 		});
 
-		const completion = await openai.chat.completions.create({
-			model: SMALL_MODEL,
-			messages: [
-				{
-					role: "system",
-					content: SYSTEM_PROMPT,
-				},
-				{
-					role: "user",
-					content: `Clean these terms: ${JSON.stringify(data.items)}`,
-				},
-			],
-			response_format: observationsSchema,
-		});
-
-		const resultText = completion.choices[0]?.message?.content;
-		if (!resultText) {
-			return new Response(
-				JSON.stringify({ error: "No response from OpenAI" }),
-				{ status: 500, headers: { "Content-Type": "application/json" } },
-			);
-		}
-
-		const result = JSON.parse(resultText) as CleanTermsResponse;
+		const result = object as CleanTermsResponse;
 
 		return new Response(
 			JSON.stringify({
