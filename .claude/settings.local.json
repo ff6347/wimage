@@ -18,7 +18,9 @@
       "Bash(node -e:*)",
       "Bash(open http://localhost:4321/demo)",
       "Bash(open:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(git checkout:*)",
+      "Bash(git rm:*)"
     ],
     "deny": [],
     "ask": []
