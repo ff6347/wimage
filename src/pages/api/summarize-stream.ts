@@ -12,6 +12,7 @@ import {
 	createRateLimitErrorResponse,
 } from "../../lib/cors";
 import { LARGE_MODEL } from "../../lib/constants";
+import { extractUserKeys, getAIProvider } from "../../lib/api-keys";
 
 interface StreamSummaryRequest {
 	title: string;
@@ -47,14 +48,17 @@ export const POST: APIRoute = async ({ request, locals }) => {
 	}
 
 	try {
-		const runtime = locals.runtime as { env?: { OPENAI_API_KEY?: string } };
-		const openaiKey =
-			runtime?.env?.OPENAI_API_KEY || import.meta.env.OPENAI_API_KEY;
+		const userKeys = extractUserKeys(request);
+		const runtime = locals.runtime as { env?: { OPENROUTER_API_KEY?: string; OPENAI_API_KEY?: string } };
+		const serverOpenRouterKey = runtime?.env?.OPENROUTER_API_KEY || import.meta.env.OPENROUTER_API_KEY;
+		const serverOpenAIKey = runtime?.env?.OPENAI_API_KEY || import.meta.env.OPENAI_API_KEY;
 
-		if (!openaiKey) {
+		const providerInfo = getAIProvider(userKeys, serverOpenRouterKey, serverOpenAIKey);
+
+		if (!providerInfo) {
 			return new Response(
-				JSON.stringify({ error: "OPENAI_API_KEY not configured" }),
-				{ status: 500, headers: { "Content-Type": "application/json" } },
+				JSON.stringify({ error: "No API keys configured (need OpenRouter or OpenAI)" }),
+				{ status: 500, headers: { "Content-Type": "application/json" } }
 			);
 		}
 
@@ -70,7 +74,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
 		// Create OpenAI provider instance with API key
 		const openai = createOpenAI({
-			apiKey: openaiKey,
+			apiKey: providerInfo.apiKey,
+			...(providerInfo.provider === 'openrouter' && {
+				baseURL: 'https://openrouter.ai/api/v1'
+			})
 		});
 
 		// Create the streaming text response
