@@ -13,11 +13,23 @@ export interface ApiKeys {
 export function extractUserKeys(request: Request): ApiKeys {
   const headers = request.headers;
 
-  return {
+  const keys = {
     moondream: headers.get('x-moondream-key') || undefined,
     openrouter: headers.get('x-openrouter-key') || undefined,
     openai: headers.get('x-openai-key') || undefined,
   };
+
+  const providedKeys = Object.entries(keys)
+    .filter(([_, value]) => value)
+    .map(([key, _]) => key);
+
+  if (providedKeys.length > 0) {
+    console.log(`[API Keys] User provided keys: ${providedKeys.join(', ')}`);
+  } else {
+    console.log('[API Keys] No user keys provided in headers');
+  }
+
+  return keys;
 }
 
 /**
@@ -30,16 +42,16 @@ export function getApiKey(
   keyName: string
 ): string | undefined {
   if (userKey && userKey.trim() !== '') {
-    console.log(`Using user-provided ${keyName} key`);
+    console.log(`[API Keys] Using user-provided ${keyName} key`);
     return userKey;
   }
 
   if (serverKey) {
-    console.log(`Using server-side ${keyName} key`);
+    console.log(`[API Keys] Using server-side ${keyName} key as fallback`);
     return serverKey;
   }
 
-  console.log(`No ${keyName} key available`);
+  console.log(`[API Keys] No ${keyName} key available`);
   return undefined;
 }
 
@@ -56,16 +68,18 @@ export function getAIProvider(
   // Try OpenRouter first (user key, then server key)
   const openrouterKey = getApiKey(userKeys.openrouter, serverOpenRouterKey, 'OpenRouter');
   if (openrouterKey) {
+    console.log(`[API Keys] Selected provider: OpenRouter`);
     return { provider: 'openrouter', apiKey: openrouterKey };
   }
 
   // Fall back to OpenAI (user key, then server key)
   const openaiKey = getApiKey(userKeys.openai, serverOpenAIKey, 'OpenAI');
   if (openaiKey) {
+    console.log(`[API Keys] Selected provider: OpenAI (OpenRouter not available)`);
     return { provider: 'openai', apiKey: openaiKey };
   }
 
   // If neither available, return null
-  console.log('No OpenRouter or OpenAI key available');
+  console.log('[API Keys] No OpenRouter or OpenAI key available');
   return null;
 }
