@@ -42,3 +42,30 @@ export function getApiKey(
   console.log(`No ${keyName} key available`);
   return undefined;
 }
+
+/**
+ * Gets the appropriate OpenAI-compatible provider with key priority
+ * Priority: OpenRouter (user > server) > OpenAI (user > server)
+ * Returns { provider: 'openrouter' | 'openai', apiKey: string } or null if no keys available
+ */
+export function getAIProvider(
+  userKeys: ApiKeys,
+  serverOpenRouterKey: string | undefined,
+  serverOpenAIKey: string | undefined
+): { provider: 'openrouter' | 'openai'; apiKey: string } | null {
+  // Try OpenRouter first (user key, then server key)
+  const openrouterKey = getApiKey(userKeys.openrouter, serverOpenRouterKey, 'OpenRouter');
+  if (openrouterKey) {
+    return { provider: 'openrouter', apiKey: openrouterKey };
+  }
+
+  // Fall back to OpenAI (user key, then server key)
+  const openaiKey = getApiKey(userKeys.openai, serverOpenAIKey, 'OpenAI');
+  if (openaiKey) {
+    return { provider: 'openai', apiKey: openaiKey };
+  }
+
+  // If neither available, return null
+  console.log('No OpenRouter or OpenAI key available');
+  return null;
+}
