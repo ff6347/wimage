@@ -60,7 +60,7 @@ export const POST: APIRoute = async ({ request }) => {
 		// Check each item against Wikipedia
 		const results: WikipediaCheckResult[] = await Promise.all(
 			items.map(async (item: string) => {
-				const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(item)}&format=json&origin=*`;
+				const url = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(item)}&format=json&redirects=1&origin=*`;
 
 				try {
 					const response = await fetch(url, {

@@ -23,7 +23,7 @@ const wikiUrlToApiUrl = (url: string): string | null => {
 		const u = new URL(url);
 		if (!u.pathname.startsWith("/wiki/")) return null;
 		const title = u.pathname.replace("/wiki/", "");
-		const wikiUrl = `${u.origin}/w/api.php?action=query&prop=extracts&titles=${encodeURIComponent(title)}&format=json&explaintext=true&origin=*`;
+		const wikiUrl = `${u.origin}/w/api.php?action=query&prop=extracts&titles=${encodeURIComponent(title)}&format=json&explaintext=true&redirects=1&origin=*`;
 		return wikiUrl;
 	} catch {
 		return null;
