@@ -5,9 +5,7 @@ import { z } from "zod";
 
 export const stringItemsSchema = z.object({
 	items: z.array(z.string())
-		.min(0)
-		.max(3)
-		.describe("Exactly three observations from the image"),
+		.describe("Three observations from the image"),
 });
 
 export type StringItems = z.infer<typeof stringItemsSchema>;
