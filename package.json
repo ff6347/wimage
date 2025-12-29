@@ -20,7 +20,7 @@
     "zod": "3.25.76"
   },
   "devDependencies": {
-    "@astrojs/cloudflare": "12.6.10",
-    "wrangler": "4.47.0"
+    "@astrojs/cloudflare": "12.6.12",
+    "wrangler": "4.54.0"
   }
 }
