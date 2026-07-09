@@ -11,7 +11,7 @@
     "pages:dev": "astro build && wrangler pages dev ./dist"
   },
   "dependencies": {
-    "@ai-sdk/openai": "2.0.65",
+    "@ai-sdk/openai": "3.0.74",
     "@openrouter/ai-sdk-provider": "1.2.3",
     "ai": "5.0.92",
     "astro": "5.15.5",
