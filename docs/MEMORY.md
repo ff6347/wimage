@@ -11,3 +11,8 @@
 ## Type checking
 
 - [risk] Astro `Locals` does not declare the Cloudflare `runtime` property, so a full `tsc --noEmit` fails until issue `49ef9ae` is resolved.
+
+## Package management
+
+- [lesson] Cloudflare selects pnpm when `pnpm-lock.yaml` exists and requires it to match `package.json` during frozen installs.
+- [technique] Reproduce deployment installs with the pnpm version reported by Cloudflare in a clean temporary directory.

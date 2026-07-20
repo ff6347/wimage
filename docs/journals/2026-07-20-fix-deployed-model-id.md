@@ -8,3 +8,5 @@
 - [technique] Regression tests cover direct OpenAI formatting, OpenRouter formatting, and already-unqualified OpenAI IDs.
 - [blocked] `git-bug` and branch pushes cannot read `~/.ssh/known_hosts` under the current nono profile.
 - [risk] Full TypeScript checking fails because Astro `Locals` does not declare `runtime`; issue `49ef9ae` tracks the project-wide declaration.
+- [lesson] Cloudflare selects pnpm when `pnpm-lock.yaml` exists and enforces frozen lockfile consistency during deployment.
+- [technique] Validate dependency metadata with a clean temporary install using the same pnpm version as the deployment environment.
