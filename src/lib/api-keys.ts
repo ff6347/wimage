@@ -3,6 +3,7 @@
 
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { createOpenAI } from "@ai-sdk/openai";
+import type { AIProviderName } from "./constants";
 
 export interface ApiKeys {
 	moondream: string | undefined;
@@ -67,7 +68,7 @@ export function getAIProviderInstance(
 	userKeys: ApiKeys,
 	serverOpenRouterKey: string | undefined,
 	serverOpenAIKey: string | undefined,
-): { provider: any; providerName: string } | null {
+): { provider: any; providerName: AIProviderName } | null {
 	// Try OpenRouter first (user key, then server key)
 	const openrouterKey = getApiKey(
 		userKeys.openrouter,

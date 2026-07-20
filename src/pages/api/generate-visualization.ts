@@ -11,7 +11,7 @@ import {
 	getClientId,
 	createRateLimitErrorResponse,
 } from "../../lib/cors";
-import { LARGE_MODEL } from "../../lib/constants";
+import { LARGE_MODEL, modelIdForProvider } from "../../lib/constants";
 
 interface Summary {
 	title: string;
@@ -104,7 +104,7 @@ ${summariesText}
 Return ONLY the complete HTML code, no explanations or markdown formatting.`;
 
 		const { text } = await generateText({
-			model: openai(LARGE_MODEL),
+			model: openai(modelIdForProvider(LARGE_MODEL, "openai")),
 			system: SYSTEM_PROMPT,
 			messages: [
 				{
