@@ -11,7 +11,7 @@ import {
 	getClientId,
 	createRateLimitErrorResponse,
 } from "../../lib/cors";
-import { LARGE_MODEL } from "../../lib/constants";
+import { LARGE_MODEL, modelIdForProvider } from "../../lib/constants";
 
 interface SummaryRequest {
 	title: string;
@@ -89,7 +89,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
 				try {
 					const { text } = await generateText({
-						model: openai(LARGE_MODEL),
+						model: openai(modelIdForProvider(LARGE_MODEL, "openai")),
 						system: SYSTEM_PROMPT,
 						messages: [
 							{

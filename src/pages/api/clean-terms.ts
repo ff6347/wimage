@@ -10,7 +10,7 @@ import {
 	getClientId,
 	createRateLimitErrorResponse,
 } from "../../lib/cors";
-import { SMALL_MODEL } from "../../lib/constants";
+import { SMALL_MODEL, modelIdForProvider } from "../../lib/constants";
 import { extractUserKeys, getAIProviderInstance } from "../../lib/api-keys";
 import { stringItemsSchema } from "../../lib/schemas";
 
@@ -84,7 +84,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
 		}
 
 		const { object } = await generateObject({
-			model: providerInstance.provider.chat(SMALL_MODEL),
+			model: providerInstance.provider.chat(
+				modelIdForProvider(SMALL_MODEL, providerInstance.providerName),
+			),
 			schema: stringItemsSchema,
 			system: SYSTEM_PROMPT,
 			prompt: `Clean these terms: ${JSON.stringify(data.items)}`,

@@ -10,7 +10,7 @@ import {
 	getClientId,
 	createRateLimitErrorResponse,
 } from "../../lib/cors";
-import { LARGE_MODEL } from "../../lib/constants";
+import { LARGE_MODEL, modelIdForProvider } from "../../lib/constants";
 import { extractUserKeys, getAIProviderInstance } from "../../lib/api-keys";
 
 interface StreamSummaryRequest {
@@ -73,7 +73,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
 		// Create the streaming text response
 		const result = streamText({
-			model: providerInstance.provider.chat(LARGE_MODEL),
+			model: providerInstance.provider.chat(
+				modelIdForProvider(LARGE_MODEL, providerInstance.providerName),
+			),
 			system: SYSTEM_PROMPT,
 			messages: [
 				{
